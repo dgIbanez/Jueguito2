@@ -52,5 +52,10 @@ check('Goblin stops at left pit while chasing',"enter(4,200,448);enemies=enemies
 check('Goblin stops at right pit while chasing',"p.x=900;p.inv=20;for(let i=0;i<300;i++)tick(1/60);enemies[0].hp>0&&enemies[0].ground&&enemies[0].x+enemies[0].w<=770");
 check('Hobgoblin lunge cannot cross ledge',"let e=enemies[0];e.type='hob';e.w=26;e.x=741;e.y=438;e.h=42;e.ground=true;e.state='strike';e.timer=.18;e.lock=1;p.x=900;tick(1/60);e.vx===0&&e.x===741&&e.ground");
 check('Enemies resume chasing away from ledges',"p.x=500;let e=enemies[0];e.state='idle';tick(1/60);e.vx===-165&&e.x<741");
+check('Room transitions do not show tutorial toast',"start(false);toast('old message');enter(1,20,448);!document.querySelector('#toast').classList.contains('show')&&toastTimer===0");
+check('Grimoire opens with torn missing pages',"progress.book=true;journal();!!document.querySelector('.grimoire .missing')&&document.querySelectorAll('.torn-stubs i').length===4&&!document.querySelector('#overlay').textContent.includes('Ascua')");
+check('Recovered page appears without spell spoilers',"resume();progress.page=true;journal();!!document.querySelector('.restored')&&!!document.querySelector('#research')&&!document.querySelector('#overlay').textContent.includes('Ascua')");
+check('Research returns to open book',"document.querySelector('#research').click();let researching=mode==='cipher';document.querySelector('#back').click();researching&&mode==='journal'&&!!document.querySelector('.grimoire')");
+check('Translated page describes spell',"resume();progress.spell=true;journal();let text=document.querySelector('.right-page').textContent;text.includes('Ascua')&&text.includes('zarzas')&&text.includes('1 carga')&&!document.querySelector('#research')");
 w.eval('start(false);title();');document.querySelector('#result').textContent=results.join('\n')+'\n'+results.filter(x=>x.startsWith('FAIL')).length+' failures';};
 </script>

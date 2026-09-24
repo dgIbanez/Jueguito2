@@ -57,3 +57,9 @@ La preparación del ataque baja a 0,32 / 0,48 segundos y la recuperación a 0,42
 ## Persecución ajustada V1.6
 
 Goblins a 180 px/s y hobgoblins a 165 px/s, por debajo de los 190 del jugador; el avance al golpear usa esas mismas velocidades. Conservan el alcance de detección y las pausas de ataque de V1.5. Antes de moverse comprueban que haya suelo delante: se detienen en los bordes de plataformas y pozos, incluso durante el ataque, y retoman la persecución cuando el jugador vuelve al lado seguro.
+
+## Grimorio visual V1.7
+
+Tras obtener el grimorio, Tab abre un libro de cuero y pergamino con restos de hojas arrancadas. Las páginas recuperadas se incorporan al libro: permanecen cifradas hasta investigarlas. La página traducida de Ascua muestra su descripción, coste, daño y tecla de uso. Se conservan únicamente los lugares visitados y hallazgos conocidos. Antes de obtener el libro, Tab sigue mostrando las notas del viaje.
+
+Se quitaron los mensajes de ayuda al cambiar de zona. Las notificaciones de objetos obtenidos y checkpoints siguen disponibles.
