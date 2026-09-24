@@ -1,0 +1,22 @@
+<!doctype html><meta charset="utf-8"><title>Runas Rotas tests</title><pre id="result">RUNNING</pre><iframe src="../index.html" width="960" height="600"></iframe><script>
+document.querySelector('iframe').onload=function(){const w=this.contentWindow,results=[];function check(name,code){try{if(!w.eval(code))throw Error('Assertion failed');results.push('PASS '+name);}catch(e){results.push('FAIL '+name+': '+e.message);}}
+check('Title rendered',"!!document.querySelector('#start')");
+check('Ground collision',"start(false);for(let i=0;i<60;i++)tick(1/60);p.hp===5&&p.ground&&p.y===448");
+check('Sword hits once per swing',"enemies=[{x:125,y:448,w:22,h:32,hp:3,max:3,type:'goblin',state:'recover',timer:9,vx:0,vy:0,hit:0,attackId:-1}];p.x=100;p.face=1;pressed.add('KeyJ');for(let i=0;i<10;i++)tick(1/60);enemies[0].hp===2");
+check('Jump reaches 110px branch',"p.y=448;p.vy=0;p.ground=true;pressed.add('Space');tick(1/60);let top=p.y;for(let i=0;i<35;i++){tick(1/60);top=Math.min(top,p.y);}448-top>=110");
+check('Boots acquisition',"enter(1,400,290);interact();progress.dash");
+check('Dash unlocked',"pressed.add('ShiftLeft');tick(1/60);p.dash>0&&p.vx>500");
+check('Book alone does not unlock magic',"enter(3,395,284);interact();progress.book&&!progress.spell");
+check('Page requires deciphering',"enter(4,680,173);interact();progress.page&&!progress.spell&&mode==='cipher'");
+check('Wrong cipher rejected',"document.querySelector('#solve').click();!progress.spell&&!!document.querySelector('#feedback').textContent");
+check('Caesar tool translation',"offset=3;cipher();document.querySelector('.decoded').textContent==='LA LLAMA ABRE EL CAMINO'");
+check('Correct cipher unlocks spell',"document.querySelector('#solve').click();progress.spell&&mode==='play'");
+check('Spell burns gate and starts boss',"enter(2,95,448);p.face=1;pressed.add('KeyK');for(let i=0;i<12;i++)tick(1/60);progress.thorns&&enemies.some(e=>e.type==='boss')");
+check('Boss cycles three attacks',"let b=enemies.find(e=>e.type==='boss'),moves=new Set();for(let i=0;i<1000;i++){p.inv=10;tick(1/60);if(b.move!==undefined)moves.add(b.move);}moves.size===3");
+check('Victory persists',"hit(enemies.find(e=>e.type==='boss'),99);progress.boss&&mode==='win'&&readSave().progress.boss");
+check('Continue restores discoveries',"start(true);progress.boss&&progress.spell&&progress.dash&&p.hp===5");
+check('Death retains discoveries',"p.inv=0;p.hp=1;hurt(500);let dead=mode==='dead';document.querySelector('#retry').click();dead&&mode==='play'&&p.hp===5&&progress.spell");
+check('Vertical exits',"enter(0,870,-40);tick(1/60);let up=room===3;p.x=800;p.y=580;tick(1/60);up&&room===0");
+check('Malformed save ignored',"localStorage.setItem(SAVE,'{broken');readSave()===null");
+w.eval('start(false);title();');document.querySelector('#result').textContent=results.join('\n')+'\n'+results.filter(x=>x.startsWith('FAIL')).length+' failures';};
+</script>
