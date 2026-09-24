@@ -39,5 +39,11 @@ check('Platforms stop arrows',"arrows=[{x:565,y:252,w:8,h:6,vx:0,vy:0,life:1}];u
 check('Archer kills persist between rooms',"hit(enemies.find(e=>e.type==='archer'),99);enter(0,20,448);enter(1,20,448);!enemies.some(e=>e.type==='archer')");
 check('Checkpoint restores archers and clears arrows',"enter(0,91,448);interact();arrows=[{life:3}];enter(1,20,448);enemies.some(e=>e.type==='archer')&&arrows.length===0");
 check('Archer poses and arrows render',"let archer=enemies.find(e=>e.type==='archer');for(const state of ['idle','wind','recover']){archer.state=state;archer.aim={x:-.8,y:.6};archer.timer=.4;draw();}arrows=[{x:400,y:250,vx:-200,vy:100}];draw();true");
+check('Boss summons only at half health',"start(false);progress.thorns=true;enter(2,20,448);let boss=enemies[0];boss.ground=true;boss.hp=17;updateBoss(boss,1/60);let before=!boss.hordeCalled;boss.hp=16;updateBoss(boss,1/60);before&&boss.hordeCalled&&boss.state==='summon'&&!enemies.some(e=>e.summoned)");
+check('Horde contains two hobgoblins and two archers',"let boss=enemies[0];boss.timer=0;updateBoss(boss,1/60);enemies.filter(e=>e.summoned&&e.type==='hob').length===2&&enemies.filter(e=>e.summoned&&e.type==='archer').length===2");
+check('Horde called only once per attempt',"let boss=enemies[0];boss.hp=10;boss.state='idle';boss.timer=0;updateBoss(boss,1/60);enemies.filter(e=>e.summoned).length===4&&boss.state==='wind'");
+check('Enemy windups render without labels',"const old=label;let labels=[];label=(text)=>labels.push(text);try{for(const e of enemies){e.state='wind';e.move=0;sprite(e);}for(const move of [0,1,2]){enemies[0].move=move;sprite(enemies[0]);}}finally{label=old;}labels.length===0");
+check('Boss victory clears reinforcements',"hit(enemies[0],99);!enemies.some(e=>e.summoned)&&arrows.length===0&&waves.length===0");
+check('New boss attempt resets horde',"start(false);progress.thorns=true;enter(2,20,448);!enemies[0].hordeCalled&&!enemies.some(e=>e.summoned)");
 w.eval('start(false);title();');document.querySelector('#result').textContent=results.join('\n')+'\n'+results.filter(x=>x.startsWith('FAIL')).length+' failures';};
 </script>

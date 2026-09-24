@@ -41,3 +41,9 @@ Las muertes producen sangre, manchas por sala y una breve animación de caída. 
 Goblins arqueros en el sendero, las copas y el campamento. Anticipan el disparo tensando el arco y fijando la dirección antes de soltar la flecha; después quedan en recuperación. Las plataformas detienen los proyectiles y el dash protege del impacto. Sus bajas siguen las mismas reglas de checkpoint que el resto de enemigos.
 
 La página incorpora una firma cifrada y un comentario del personaje sobre Iulin Saerh, escriba de la Torre Gris. El texto y la firma se traducen juntos con la rueda; ni la pista ni los intentos fallidos revelan el desplazamiento correcto.
+
+## Gestos y refuerzos V1.4
+
+Se eliminaron exclamaciones y nombres flotantes de ataques. El jefe anticipa el tajo levantando el arma y girando el cuerpo, el salto agachándose y la embestida inclinándose hacia delante. Las animaciones de los enemigos comunes se conservan.
+
+Al alcanzar el 50 % de salud, el jefe completa su aterrizaje si estaba en el aire y levanta el arma para llamar refuerzos: dos hobgoblins y dos arqueros, una sola vez por intento. Los refuerzos tienen una breve pausa inicial antes de atacar. Al derrotar al jefe se retiran los refuerzos y sus proyectiles; al reintentar se reinicia la invocación.
