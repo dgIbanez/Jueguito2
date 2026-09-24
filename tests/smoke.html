@@ -21,7 +21,7 @@ check('Continue restores discoveries',"start(true);progress.boss&&progress.spell
 check('Death retains discoveries',"p.inv=0;p.hp=1;hurt(500);let dead=mode==='dead';document.querySelector('#retry').click();dead&&mode==='play'&&p.hp===5&&progress.spell");
 check('Vertical exits',"enter(0,870,-40);tick(1/60);let up=room===3;p.x=800;p.y=580;tick(1/60);up&&room===0");
 check('Malformed save ignored',"localStorage.setItem(SAVE,'{broken');readSave()===null");
-check('Journal conceals undiscovered content',"start(false);journal();let text=document.querySelector('#overlay').textContent;!text.includes('botas')&&!text.includes('Ascua')&&!text.includes('página')&&document.querySelectorAll('.map>div').length===1");
+check('Journal conceals undiscovered content',"start(false);journal();let text=document.querySelector('#overlay').textContent;!text.includes('botas')&&!text.includes('Ascua')&&!text.includes('página')&&!document.querySelector('.map')");
 check('Found untranslated page hides spell name',"resume();progress.page=true;journal();let text=document.querySelector('#overlay').textContent;text.includes('Página ilegible')&&!text.includes('Ascua')");
 check('Enemy death creates blood and collapse',"resume();enter(0,100,448);hit(enemies[0],99);defeated.has('0:0')&&bloodByRoom[0].length>0&&deathPoses.length===1");
 check('Room changes preserve kills and blood',"enter(1,20,448);enter(0,920,448);enemies.length===0&&bloodByRoom[0].length>0");
@@ -57,5 +57,12 @@ check('Grimoire opens with torn missing pages',"progress.book=true;journal();!!d
 check('Recovered page appears without spell spoilers',"resume();progress.page=true;journal();!!document.querySelector('.restored')&&!!document.querySelector('#research')&&!document.querySelector('#overlay').textContent.includes('Ascua')");
 check('Research returns to open book',"document.querySelector('#research').click();let researching=mode==='cipher';document.querySelector('#back').click();researching&&mode==='journal'&&!!document.querySelector('.grimoire')");
 check('Translated page describes spell',"resume();progress.spell=true;journal();let text=document.querySelector('.right-page').textContent;text.includes('Ascua')&&text.includes('zarzas')&&text.includes('1 carga')&&!document.querySelector('#research')");
+check('Map requires pickup',"start(false);openMap();mode==='play'&&!progress.map&&!document.querySelector('.world-map')");
+check('Map pickup persists',"p.x=166;p.y=448;interact();progress.map&&readSave().progress.map");
+check('M opens independent explored map',"window.dispatchEvent(new KeyboardEvent('keydown',{code:'KeyM'}));mode==='map'&&document.querySelectorAll('.map-room').length===1&&!document.querySelector('.grimoire')");
+check('M closes map and restores play',"window.dispatchEvent(new KeyboardEvent('keydown',{code:'KeyM'}));mode==='play'&&!document.querySelector('.world-map')");
+check('Grimoire contains no map',"progress.book=true;journal();!!document.querySelector('.grimoire')&&!document.querySelector('.map')&&!document.querySelector('.map-room')&&!document.querySelector('.grimoire').textContent.includes(rooms[room].name)");
+check('Map records newly explored zones',"resume();enter(1,20,448);openMap();document.querySelectorAll('.map-room').length===2&&document.querySelector('.map-room.current').textContent.includes(rooms[1].name)");
+check('Map retained when continuing',"resume();save();start(true);progress.map");
 w.eval('start(false);title();');document.querySelector('#result').textContent=results.join('\n')+'\n'+results.filter(x=>x.startsWith('FAIL')).length+' failures';};
 </script>

@@ -12,7 +12,7 @@ Seis salas conectadas horizontal y verticalmente, espada, goblins, hobgoblins, b
 - Shift: impulso, tras encontrar las botas.
 - K: Ascua, tras investigar la página.
 - E: interactuar y descansar en santuarios.
-- Tab: grimorio y mapa. Escape: pausa. F: pantalla completa (F11 como alternativa del navegador).
+- Tab: grimorio. M: abrir/cerrar mapa (requiere recogerlo). Escape: pausa. F: pantalla completa (F11 como alternativa del navegador).
 
 Los descubrimientos se guardan automáticamente; los santuarios fijan el punto de regreso y curan. Continuar restaura salud y conserva las bajas de enemigos, las mejoras y la victoria del jefe. Los enemigos comunes reaparecen al descansar en un santuario o al regresar al checkpoint tras morir. El guardado pertenece al navegador y al origen. Con almacenamiento bloqueado se puede jugar sin persistencia.
 
@@ -63,3 +63,9 @@ Goblins a 180 px/s y hobgoblins a 165 px/s, por debajo de los 190 del jugador; e
 Tras obtener el grimorio, Tab abre un libro de cuero y pergamino con restos de hojas arrancadas. Las páginas recuperadas se incorporan al libro: permanecen cifradas hasta investigarlas. La página traducida de Ascua muestra su descripción, coste, daño y tecla de uso. Se conservan únicamente los lugares visitados y hallazgos conocidos. Antes de obtener el libro, Tab sigue mostrando las notas del viaje.
 
 Se quitaron los mensajes de ayuda al cambiar de zona. Las notificaciones de objetos obtenidos y checkpoints siguen disponibles.
+
+## Mapa independiente V1.8
+
+El mapa está tirado junto al punto inicial del personaje, a la derecha del santuario. Se recoge con E y se abre o cierra con M; Escape también lo cierra. La carta muestra únicamente salas visitadas, sus conexiones conocidas y la ubicación actual, sin revelar zonas futuras. Su adquisición se guarda con la partida. Las partidas anteriores pueden volver al inicio para recogerlo.
+
+Tab conserva el grimorio y las notas previas a encontrarlo, pero ya no contiene el mapa.
