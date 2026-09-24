@@ -30,5 +30,14 @@ check('Checkpoint restores ordinary enemies',"p.x=91;p.y=448;interact();enemies.
 check('Death return restores encounters',"hit(enemies[0],99);p.inv=0;p.hp=1;hurt(0);document.querySelector('#retry').click();enemies.length===1&&defeated.size===0");
 check('Checkpoint never resurrects defeated boss',"progress.boss=true;interact();enter(2,20,448);!enemies.some(e=>e.type==='boss')");
 check('Animated poses render without errors',"enter(1,20,448);for(const state of ['idle','wind','strike','recover']){enemies[0].state=state;draw();}p.attack=.15;draw();p.dash=.1;draw();hit(enemies[0],99);draw();true");
+check('Fantasy clue does not disclose solution',"offset=0;cipher();let clue=document.querySelector('#overlay').textContent;!clue.includes('tres')&&!clue.includes('César')&&!clue.includes('Julio')&&clue.includes('Torre Gris')");
+check('Signature uses the same cipher',"offset=3;cipher();document.querySelector('.signature').textContent==='— IULIN SAERH'");
+check('Archer telegraphs and then shoots',"resume();start(false);enter(1,450,218);let archer=enemies.find(e=>e.type==='archer');archer.timer=0;updateArcher(archer,1/60);let wind=archer.state==='wind'&&arrows.length===0;archer.timer=0;updateArcher(archer,1/60);wind&&arrows.length===1&&archer.state==='recover'");
+check('Arrow damages player',"p.inv=0;p.dash=0;p.hp=5;arrows=[{x:p.x,y:p.y+10,w:8,h:6,vx:0,vy:0,life:1}];updateArrows(1/60);p.hp===4&&arrows.length===0");
+check('Dash protects against arrows',"p.inv=0;p.dash=.1;p.hp=5;arrows=[{x:p.x,y:p.y+10,w:8,h:6,vx:0,vy:0,life:1}];updateArrows(1/60);p.hp===5");
+check('Platforms stop arrows',"arrows=[{x:565,y:252,w:8,h:6,vx:0,vy:0,life:1}];updateArrows(1/60);arrows.length===0");
+check('Archer kills persist between rooms',"hit(enemies.find(e=>e.type==='archer'),99);enter(0,20,448);enter(1,20,448);!enemies.some(e=>e.type==='archer')");
+check('Checkpoint restores archers and clears arrows',"enter(0,91,448);interact();arrows=[{life:3}];enter(1,20,448);enemies.some(e=>e.type==='archer')&&arrows.length===0");
+check('Archer poses and arrows render',"let archer=enemies.find(e=>e.type==='archer');for(const state of ['idle','wind','recover']){archer.state=state;archer.aim={x:-.8,y:.6};archer.timer=.4;draw();}arrows=[{x:400,y:250,vx:-200,vy:100}];draw();true");
 w.eval('start(false);title();');document.querySelector('#result').textContent=results.join('\n')+'\n'+results.filter(x=>x.startsWith('FAIL')).length+' failures';};
 </script>

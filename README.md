@@ -35,3 +35,9 @@ El juego ocupa toda la ventana manteniendo la proporción 16:9, con bandas cuand
 El diario muestra únicamente salas visitadas y hallazgos obtenidos. Una página sin investigar no revela su hechizo. Las bajas normales se conservan entre salas y al recargar; descansar en un santuario o volver tras morir reinicia los enemigos comunes. El jefe derrotado no reaparece.
 
 Las muertes producen sangre, manchas por sala y una breve animación de caída. Las manchas duran hasta reiniciar los encuentros o recargar la partida. Las animaciones siguen dibujadas mediante Canvas, sin hojas de sprites: balanceo corporal, pasos, bufanda, postura de impulso y movimiento de armas durante preparación, ataque y recuperación. Las poses visuales no alteran las colisiones.
+
+## Arqueros e investigación V1.3
+
+Goblins arqueros en el sendero, las copas y el campamento. Anticipan el disparo tensando el arco y fijando la dirección antes de soltar la flecha; después quedan en recuperación. Las plataformas detienen los proyectiles y el dash protege del impacto. Sus bajas siguen las mismas reglas de checkpoint que el resto de enemigos.
+
+La página incorpora una firma cifrada y un comentario del personaje sobre Iulin Saerh, escriba de la Torre Gris. El texto y la firma se traducen juntos con la rueda; ni la pista ni los intentos fallidos revelan el desplazamiento correcto.
