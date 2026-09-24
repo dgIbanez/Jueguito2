@@ -21,5 +21,14 @@ check('Continue restores discoveries',"start(true);progress.boss&&progress.spell
 check('Death retains discoveries',"p.inv=0;p.hp=1;hurt(500);let dead=mode==='dead';document.querySelector('#retry').click();dead&&mode==='play'&&p.hp===5&&progress.spell");
 check('Vertical exits',"enter(0,870,-40);tick(1/60);let up=room===3;p.x=800;p.y=580;tick(1/60);up&&room===0");
 check('Malformed save ignored',"localStorage.setItem(SAVE,'{broken');readSave()===null");
+check('Journal conceals undiscovered content',"start(false);journal();let text=document.querySelector('#overlay').textContent;!text.includes('botas')&&!text.includes('Ascua')&&!text.includes('página')&&document.querySelectorAll('.map>div').length===1");
+check('Found untranslated page hides spell name',"resume();progress.page=true;journal();let text=document.querySelector('#overlay').textContent;text.includes('Página ilegible')&&!text.includes('Ascua')");
+check('Enemy death creates blood and collapse',"resume();enter(0,100,448);hit(enemies[0],99);defeated.has('0:0')&&bloodByRoom[0].length>0&&deathPoses.length===1");
+check('Room changes preserve kills and blood',"enter(1,20,448);enter(0,920,448);enemies.length===0&&bloodByRoom[0].length>0");
+check('Reload preserves defeated enemies',"start(true);enemies.length===0&&defeated.has('0:0')");
+check('Checkpoint restores ordinary enemies',"p.x=91;p.y=448;interact();enemies.length===1&&defeated.size===0&&Object.keys(bloodByRoom).length===0");
+check('Death return restores encounters',"hit(enemies[0],99);p.inv=0;p.hp=1;hurt(0);document.querySelector('#retry').click();enemies.length===1&&defeated.size===0");
+check('Checkpoint never resurrects defeated boss',"progress.boss=true;interact();enter(2,20,448);!enemies.some(e=>e.type==='boss')");
+check('Animated poses render without errors',"enter(1,20,448);for(const state of ['idle','wind','strike','recover']){enemies[0].state=state;draw();}p.attack=.15;draw();p.dash=.1;draw();hit(enemies[0],99);draw();true");
 w.eval('start(false);title();');document.querySelector('#result').textContent=results.join('\n')+'\n'+results.filter(x=>x.startsWith('FAIL')).length+' failures';};
 </script>

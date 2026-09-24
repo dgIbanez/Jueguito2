@@ -14,7 +14,7 @@ Seis salas conectadas horizontal y verticalmente, espada, goblins, hobgoblins, b
 - E: interactuar y descansar en santuarios.
 - Tab: grimorio y mapa. Escape: pausa. F: pantalla completa (F11 como alternativa del navegador).
 
-Los descubrimientos se guardan automáticamente; los santuarios fijan el punto de regreso y curan. Continuar restaura salud y enemigos normales, conservando mejoras y victoria del jefe. El guardado pertenece al navegador y al origen. Con almacenamiento bloqueado se puede jugar sin persistencia.
+Los descubrimientos se guardan automáticamente; los santuarios fijan el punto de regreso y curan. Continuar restaura salud y conserva las bajas de enemigos, las mejoras y la victoria del jefe. Los enemigos comunes reaparecen al descansar en un santuario o al regresar al checkpoint tras morir. El guardado pertenece al navegador y al origen. Con almacenamiento bloqueado se puede jugar sin persistencia.
 
 ## Publicación
 
@@ -29,3 +29,9 @@ Abrir tests/smoke.html desde un servidor estático local para ejecutar pruebas s
 ## Presentación V1.1
 
 El juego ocupa toda la ventana manteniendo la proporción 16:9, con bandas cuando la pantalla tiene otra proporción. La portada y el menú de pausa contienen ayuda, sonido y pantalla completa. Los menús se recorren con flechas o Tab y se confirman con Enter. Se retiraron los controles táctiles y el contenido exterior al juego.
+
+## Combate y exploración V1.2
+
+El diario muestra únicamente salas visitadas y hallazgos obtenidos. Una página sin investigar no revela su hechizo. Las bajas normales se conservan entre salas y al recargar; descansar en un santuario o volver tras morir reinicia los enemigos comunes. El jefe derrotado no reaparece.
+
+Las muertes producen sangre, manchas por sala y una breve animación de caída. Las manchas duran hasta reiniciar los encuentros o recargar la partida. Las animaciones siguen dibujadas mediante Canvas, sin hojas de sprites: balanceo corporal, pasos, bufanda, postura de impulso y movimiento de armas durante preparación, ataque y recuperación. Las poses visuales no alteran las colisiones.
