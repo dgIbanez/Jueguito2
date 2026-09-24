@@ -1,6 +1,9 @@
 <!doctype html><meta charset="utf-8"><title>Runas Rotas tests</title><pre id="result">RUNNING</pre><iframe src="../index.html" width="960" height="600"></iframe><script>
 document.querySelector('iframe').onload=function(){const w=this.contentWindow,results=[];function check(name,code){try{if(!w.eval(code))throw Error('Assertion failed');results.push('PASS '+name);}catch(e){results.push('FAIL '+name+': '+e.message);}}
 check('Title rendered',"!!document.querySelector('#start')");
+check('Keyboard menu navigation',"document.querySelector('#start').focus();window.dispatchEvent(new KeyboardEvent('keydown',{code:'ArrowDown'}));document.activeElement!==document.querySelector('#start')&&document.activeElement.matches('#overlay button')");
+check('Controls and sound available in menu',"help();let ok=!!document.querySelector('#sound')&&!!document.querySelector('#fullscreen');document.querySelector('#back').click();ok&&mode==='title'");
+check('Stage fits viewport without stretching',"let r=document.querySelector('#game').getBoundingClientRect();Math.abs(r.width/r.height-16/9)<.01&&r.width<=innerWidth+1&&r.height<=innerHeight+1&&(Math.abs(r.width-innerWidth)<1||Math.abs(r.height-innerHeight)<1)");
 check('Ground collision',"start(false);for(let i=0;i<60;i++)tick(1/60);p.hp===5&&p.ground&&p.y===448");
 check('Sword hits once per swing',"enemies=[{x:125,y:448,w:22,h:32,hp:3,max:3,type:'goblin',state:'recover',timer:9,vx:0,vy:0,hit:0,attackId:-1}];p.x=100;p.face=1;pressed.add('KeyJ');for(let i=0;i<10;i++)tick(1/60);enemies[0].hp===2");
 check('Jump reaches 110px branch',"p.y=448;p.vy=0;p.ground=true;pressed.add('Space');tick(1/60);let top=p.y;for(let i=0;i<35;i++){tick(1/60);top=Math.min(top,p.y);}448-top>=110");
