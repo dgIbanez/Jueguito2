@@ -35,7 +35,8 @@ check('Signature uses the same cipher',"offset=3;cipher();document.querySelector
 check('Archer telegraphs and then shoots',"resume();start(false);enter(1,450,218);let archer=enemies.find(e=>e.type==='archer');archer.timer=0;updateArcher(archer,1/60);let wind=archer.state==='wind'&&arrows.length===0;archer.timer=0;updateArcher(archer,1/60);wind&&arrows.length===1&&archer.state==='recover'");
 check('Arrow damages player',"p.inv=0;p.dash=0;p.hp=5;arrows=[{x:p.x,y:p.y+10,w:8,h:6,vx:0,vy:0,life:1}];updateArrows(1/60);p.hp===4&&arrows.length===0");
 check('Dash protects against arrows',"p.inv=0;p.dash=.1;p.hp=5;arrows=[{x:p.x,y:p.y+10,w:8,h:6,vx:0,vy:0,life:1}];updateArrows(1/60);p.hp===5");
-check('Platforms stop arrows',"arrows=[{x:565,y:252,w:8,h:6,vx:0,vy:0,life:1}];updateArrows(1/60);arrows.length===0");
+check('Floating platforms allow arrows through',"arrows=[{x:565,y:252,w:8,h:6,vx:0,vy:0,life:1}];updateArrows(1/60);arrows.length===1");
+check('Solid ground still stops arrows',"arrows=[{x:565,y:482,w:8,h:6,vx:0,vy:0,life:1}];updateArrows(1/60);arrows.length===0");
 check('Archer kills persist between rooms',"hit(enemies.find(e=>e.type==='archer'),99);enter(0,20,448);enter(1,20,448);!enemies.some(e=>e.type==='archer')");
 check('Checkpoint restores archers and clears arrows',"enter(0,91,448);interact();arrows=[{life:3}];enter(1,20,448);enemies.some(e=>e.type==='archer')&&arrows.length===0");
 check('Archer poses and arrows render',"let archer=enemies.find(e=>e.type==='archer');for(const state of ['idle','wind','recover']){archer.state=state;archer.aim={x:-.8,y:.6};archer.timer=.4;draw();}arrows=[{x:400,y:250,vx:-200,vy:100}];draw();true");
@@ -45,5 +46,7 @@ check('Horde called only once per attempt',"let boss=enemies[0];boss.hp=10;boss.
 check('Enemy windups render without labels',"const old=label;let labels=[];label=(text)=>labels.push(text);try{for(const e of enemies){e.state='wind';e.move=0;sprite(e);}for(const move of [0,1,2]){enemies[0].move=move;sprite(enemies[0]);}}finally{label=old;}labels.length===0");
 check('Boss victory clears reinforcements',"hit(enemies[0],99);!enemies.some(e=>e.summoned)&&arrows.length===0&&waves.length===0");
 check('New boss attempt resets horde',"start(false);progress.thorns=true;enter(2,20,448);!enemies[0].hordeCalled&&!enemies.some(e=>e.summoned)");
+check('Melee enemies pursue from longer range',"start(false);enter(1,20,448);enemies=enemies.filter(e=>e.type!=='archer');enemies[1].x=580;tick(1/60);enemies[0].vx===-205&&enemies[1].vx===-155");
+check('Melee lunge commits to prepared direction',"let e=enemies[0];e.x=200;e.y=448;e.state='strike';e.timer=.18;e.lock=1;p.x=100;tick(1/60);e.vx===235&&e.face===1");
 w.eval('start(false);title();');document.querySelector('#result').textContent=results.join('\n')+'\n'+results.filter(x=>x.startsWith('FAIL')).length+' failures';};
 </script>
