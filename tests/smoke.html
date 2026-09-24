@@ -46,7 +46,11 @@ check('Horde called only once per attempt',"let boss=enemies[0];boss.hp=10;boss.
 check('Enemy windups render without labels',"const old=label;let labels=[];label=(text)=>labels.push(text);try{for(const e of enemies){e.state='wind';e.move=0;sprite(e);}for(const move of [0,1,2]){enemies[0].move=move;sprite(enemies[0]);}}finally{label=old;}labels.length===0");
 check('Boss victory clears reinforcements',"hit(enemies[0],99);!enemies.some(e=>e.summoned)&&arrows.length===0&&waves.length===0");
 check('New boss attempt resets horde',"start(false);progress.thorns=true;enter(2,20,448);!enemies[0].hordeCalled&&!enemies.some(e=>e.summoned)");
-check('Melee enemies pursue from longer range',"start(false);enter(1,20,448);enemies=enemies.filter(e=>e.type!=='archer');enemies[1].x=580;tick(1/60);enemies[0].vx===-205&&enemies[1].vx===-155");
-check('Melee lunge commits to prepared direction',"let e=enemies[0];e.x=200;e.y=448;e.state='strike';e.timer=.18;e.lock=1;p.x=100;tick(1/60);e.vx===235&&e.face===1");
+check('Melee enemies pursue from longer range',"start(false);enter(1,20,448);enemies=enemies.filter(e=>e.type!=='archer');enemies[1].x=580;tick(1/60);enemies[0].vx===-180&&enemies[1].vx===-165");
+check('Melee lunge commits to prepared direction',"let e=enemies[0];e.x=200;e.y=448;e.state='strike';e.timer=.18;e.lock=1;p.x=100;tick(1/60);e.vx===180&&e.face===1");
+check('Goblin stops at left pit while chasing',"enter(4,200,448);enemies=enemies.filter(e=>e.type==='goblin');p.inv=20;for(let i=0;i<300;i++)tick(1/60);enemies[0].hp>0&&enemies[0].ground&&enemies[0].x>=395");
+check('Goblin stops at right pit while chasing',"p.x=900;p.inv=20;for(let i=0;i<300;i++)tick(1/60);enemies[0].hp>0&&enemies[0].ground&&enemies[0].x+enemies[0].w<=770");
+check('Hobgoblin lunge cannot cross ledge',"let e=enemies[0];e.type='hob';e.w=26;e.x=741;e.y=438;e.h=42;e.ground=true;e.state='strike';e.timer=.18;e.lock=1;p.x=900;tick(1/60);e.vx===0&&e.x===741&&e.ground");
+check('Enemies resume chasing away from ledges',"p.x=500;let e=enemies[0];e.state='idle';tick(1/60);e.vx===-165&&e.x<741");
 w.eval('start(false);title();');document.querySelector('#result').textContent=results.join('\n')+'\n'+results.filter(x=>x.startsWith('FAIL')).length+' failures';};
 </script>

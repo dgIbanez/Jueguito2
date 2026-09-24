@@ -53,3 +53,7 @@ Al alcanzar el 50 % de salud, el jefe completa su aterrizaje si estaba en el air
 Las flechas atraviesan todas las plataformas flotantes, incluidas las del jefe, pero chocan con el suelo sólido. Goblins y hobgoblins detectan al jugador a 620 píxeles, frente a los 330 anteriores. La persecución sube de 70 a 205 píxeles/segundo para goblins y de 48 a 155 para hobgoblins (el jugador corre a 190).
 
 La preparación del ataque baja a 0,32 / 0,48 segundos y la recuperación a 0,42 / 0,70 segundos, respectivamente. Ambos avanzan durante el golpe, manteniendo la dirección que eligieron al prepararlo: esquivar sigue siendo posible, pero alejarse caminando ya no basta contra los goblins.
+
+## Persecución ajustada V1.6
+
+Goblins a 180 px/s y hobgoblins a 165 px/s, por debajo de los 190 del jugador; el avance al golpear usa esas mismas velocidades. Conservan el alcance de detección y las pausas de ataque de V1.5. Antes de moverse comprueban que haya suelo delante: se detienen en los bordes de plataformas y pozos, incluso durante el ataque, y retoman la persecución cuando el jugador vuelve al lado seguro.
