@@ -1,0 +1,23 @@
+[
+  {
+    "id": "mural_runa",
+    "title": "Relieve de las raíces",
+    "text": "Una piedra muestra cuatro signos tallados sobre la imagen de una piedra más pequeña. Debajo, una mano posterior grabó en letra común:",
+    "script": "iulin",
+    "word": "RUNA"
+  },
+  {
+    "id": "mural_guarda",
+    "title": "Inscripción del pozo",
+    "text": "En el fondo del pozo, junto a una figura con escudo, seis signos. Alguien rayó la traducción con la punta de un cuchillo:",
+    "script": "iulin",
+    "word": "GUARDA"
+  },
+  {
+    "id": "mural_espera",
+    "title": "Mural de la galería",
+    "text": "Un caminante sentado bajo un árbol, inmóvil. Seis signos lo rodean. En el marco, pintado con ocre:",
+    "script": "iulin",
+    "word": "ESPERA"
+  }
+]

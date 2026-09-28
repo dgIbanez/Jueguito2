@@ -1,0 +1,27 @@
+[
+  {
+    "id": "page_ascua",
+    "numeral": "II",
+    "title": "Una voz entre las letras",
+    "cipher": { "type": "caesar" },
+    "ciphertext": "OD OODPD DEUH HO FDPLQR",
+    "signature": "LXOLQ VDHUK",
+    "solutionHash": "04edc37bf043b8",
+    "spell": "ascua",
+    "note": "«Parece que quien escribió esta página no quería que cualquiera la leyera. Eso del final parece una firma… ¿Iulin Saerh, el escriba de la Torre Gris? Las letras se ven extrañamente cambiadas».",
+    "failHint": "La frase sigue siendo extraña. Quizá la firma ayude a reconocer el orden de las letras."
+  },
+  {
+    "id": "page_egida",
+    "numeral": "III",
+    "title": "Signos que esperan",
+    "cipher": { "type": "runes", "script": "iulin" },
+    "ciphertext": "ᛈᛖ ᚾᛚᛏᛖ ᛜᛚᛖᚾᚹᛖ ᛖᛈ ᛁᛚᛟ ᛟᚷᚱᛟᚾᛖ",
+    "signature": "ᛇᛚᛈᛇᛏ ᚷᛖᛟᚾᚠ",
+    "solutionHash": "0fb24667b128ec",
+    "spell": "egida",
+    "maxUnknown": 2,
+    "note": "«Ya no son letras cambiadas: son signos que nunca vi. Los mismos que tallaron en las piedras del bosque. Si reúno lo que dicen los murales, quizá pueda leerla. La firma, otra vez, parece la de Iulin».",
+    "failHint": "Algunos signos siguen sin sentido. Los murales enseñan palabras enteras; lo que falte puede deducirse de las palabras que ya se leen."
+  }
+]

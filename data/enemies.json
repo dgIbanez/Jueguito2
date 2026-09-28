@@ -1,0 +1,42 @@
+{
+  "goblin": {
+    "ai": "melee",
+    "look": "goblin",
+    "w": 22,
+    "h": 32,
+    "hp": 3,
+    "speed": 180,
+    "detect": 620,
+    "trigger": 65,
+    "reach": 45,
+    "windup": 0.32,
+    "strike": 0.18,
+    "recover": 0.42
+  },
+  "hob": {
+    "ai": "melee",
+    "look": "hob",
+    "w": 26,
+    "h": 42,
+    "hp": 5,
+    "speed": 165,
+    "detect": 620,
+    "trigger": 65,
+    "reach": 45,
+    "windup": 0.48,
+    "strike": 0.18,
+    "recover": 0.7
+  },
+  "archer": {
+    "ai": "archer",
+    "look": "archer",
+    "w": 22,
+    "h": 32,
+    "hp": 3,
+    "range": 540,
+    "windup": 0.85,
+    "recover": 1.5,
+    "rest": 0.4,
+    "arrowSpeed": 285
+  }
+}

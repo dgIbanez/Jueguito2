@@ -1,0 +1,27 @@
+{
+  "name": "runas-rotas",
+  "private": true,
+  "version": "2.0.0",
+  "type": "module",
+  "description": "Metroidvania de salas y jefes con un grimorio de páginas cifradas. Solo teclado, publicado como sitio estático.",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview --port 4173 --strictPort",
+    "typecheck": "tsc --noEmit",
+    "validate": "node scripts/validate-world.ts",
+    "check": "npm run typecheck && npm run validate && npm test",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "test:e2e": "playwright test",
+    "encode-page": "node scripts/encode-page.ts",
+    "seed-world": "node scripts/seed-world.mjs"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.63.0",
+    "@types/node": "^26.6.3",
+    "typescript": "^7.0.2",
+    "vite": "^8.3.1",
+    "vitest": "^5.0.2"
+  }
+}

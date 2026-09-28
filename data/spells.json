@@ -1,0 +1,23 @@
+{
+  "ascua": {
+    "name": "Ascua",
+    "slot": 1,
+    "cost": 1,
+    "effect": "projectile",
+    "damage": 2,
+    "speed": 430,
+    "unlock": "ASCUA DESBLOQUEADA · {spell1} para lanzar fuego. Las llamas abren caminos entre las zarzas.",
+    "description": "Concentra una chispa de magia antigua y la lanza hacia delante. Quema a tus enemigos y las zarzas que cierran el paso.",
+    "stats": [["Coste", "1 carga de magia"], ["Impacto", "2 puntos de daño"]]
+  },
+  "egida": {
+    "name": "Égida de runas",
+    "slot": 2,
+    "cost": 1,
+    "effect": "shield",
+    "duration": 0.7,
+    "unlock": "ÉGIDA DE RUNAS · {spell2} para rodearte de signos. Devuelve las flechas y detiene las ondas.",
+    "description": "Un círculo de signos te envuelve por un instante. Nada te toca, y las flechas vuelven hacia quien las disparó.",
+    "stats": [["Coste", "1 carga de magia"], ["Duración", "0,7 segundos"]]
+  }
+}

@@ -1,4 +1,8 @@
 node_modules/
+dist/
 test-results/
+playwright-report/
 .browser-test/
+*.ldtk.bak
+data/backups/
 Thumbs.db

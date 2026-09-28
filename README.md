@@ -1,71 +1,92 @@
-# Runas Rotas — versión 1
+# Runas Rotas
 
-Aventura original pixel art para GitHub Pages. Canvas 2D y JavaScript sin dependencias ni compilación. Abrí index.html para jugar.
+Metroidvania de salas y jefes con un grimorio de páginas cifradas. El personaje empieza con movimiento básico, gana mejoras (impulso, garras para saltar en paredes, doble salto) y aprende magia descifrando páginas perdidas. Solo teclado. Se publica como sitio estático en GitHub Pages.
 
-Seis salas conectadas horizontal y verticalmente, espada, goblins, hobgoblins, botas con dash, grimorio y una página que requiere resolver un cifrado César con herramientas integradas. Ascua quema zarzas y abre el claro del Rey Goblin, con tres ataques anticipados y una segunda fase más rápida. Santuarios, mapa, guardado local, sonido opcional y controles exclusivamente de teclado.
+## Controles (reasignables en Pausa → Reasignar teclas)
 
-## Controles
+| Acción | Teclas |
+|---|---|
+| Moverse | A / D o ← / → |
+| Saltar (mantener para más altura) | Espacio, W o ↑ |
+| Espada · golpe descendente en el aire | J · S/↓ + J |
+| Bajar de una plataforma | S/↓ + saltar |
+| Impulso | Shift |
+| Hechizos | K · L |
+| Interactuar | E |
+| Grimorio · Mapa · Pausa · Pantalla completa | Tab · M · Esc · F |
 
-- A / D o flechas: movimiento.
-- Espacio / W / arriba: salto.
-- J: espada. Acertar recupera magia.
-- Shift: impulso, tras encontrar las botas.
-- K: Ascua, tras investigar la página.
-- E: interactuar y descansar en santuarios.
-- Tab: grimorio. M: abrir/cerrar mapa (requiere recogerlo). Escape: pausa. F: pantalla completa (F11 como alternativa del navegador).
+## Desarrollo
 
-Los descubrimientos se guardan automáticamente; los santuarios fijan el punto de regreso y curan. Continuar restaura salud y conserva las bajas de enemigos, las mejoras y la victoria del jefe. Los enemigos comunes reaparecen al descansar en un santuario o al regresar al checkpoint tras morir. El guardado pertenece al navegador y al origen. Con almacenamiento bloqueado se puede jugar sin persistencia.
+Requiere Node 24.
+
+```sh
+npm install
+npm run dev          # servidor local con recarga en caliente
+npm run check        # tipos + validación del mundo + pruebas unitarias
+npm run test:e2e     # pruebas en navegador (Playwright); la primera vez: npx playwright install chromium
+npm run build        # genera dist/, lo que se publica
+```
+
+Con `?debug` en la URL (o en `npm run dev`) queda disponible `window.runas` con el estado del juego para depurar.
+
+## Estructura
+
+```
+data/                 contenido: lo que se edita para crear el juego
+  world.ldtk            salas, terreno y entidades (editor LDtk)
+  enemies.json          estadísticas de cada enemigo
+  bosses.json           jefes: vida, patrón de ataques, refuerzos, texto de victoria
+  abilities.json        mejoras de movimiento
+  items.json            mapa y grimorio
+  spells.json           hechizos que enseñan las páginas
+  pages.json            páginas cifradas (texto cifrado + hash de la solución)
+  clues.json            murales que revelan signos de la escritura rúnica
+  scripts.json          alfabetos rúnicos
+src/
+  core/                 entrada, sonido, guardado versionado, preferencias
+  world/                lectura de LDtk, colisiones por casillas, validador
+  entities/             personaje, enemigos, jefe
+  magic/                motor de cifrados y hash de soluciones
+  game/                 simulación (sin DOM: se prueba con Vitest)
+  render/               dibujo en Canvas: fondos, casillas, sprites, objetos
+  ui/                   menús, grimorio, herramientas de descifrado, mapa, HUD
+scripts/
+  validate-world.ts     revisa referencias, aberturas y progresión
+  encode-page.ts        cifra una página nueva y calcula su hash
+  seed-world.mjs        generó el world.ldtk inicial (no volver a usar)
+tests/unit/             Vitest: física, cifrados, guardado, combate, recorridos
+tests/e2e/              Playwright: menús, teclado, grimorio, mapa, capturas
+```
+
+La simulación (`src/game`) no toca el DOM: emite eventos (`toast`, `openPage`, `victory`…) y la interfaz los escucha. Por eso casi todo se prueba sin navegador.
+
+## Cómo agregar contenido
+
+**Una sala.** Abrí `data/world.ldtk` con [LDtk](https://ldtk.io). La capa `Collision` tiene tres valores: `solid` (pared), `oneway` (plataforma que se atraviesa desde abajo) y `spikes` (zarzas que dañan). Las salas se conectan solas por su posición en el mundo: una abertura en el borde lleva a la sala vecina. Cada sala tiene los campos `name`, `biome` (`forest`, `canopy`, `ruins`, `boss`) y `requires`.
+
+**Entidades** (capa `Entities`): `PlayerStart`, `Shrine`, `Item` (`item`), `Ability` (`ability`), `Page` (`page`), `Clue` (`clue`), `Enemy` (`kind`), `Boss` (`boss`, `trigger`) y `Gate` (`gateId`, `opensWith`, redimensionable).
+
+**Requisitos.** Los campos `requires`, `opensWith` y `trigger` usan fichas `tipo:id`: `ability:dash`, `spell:ascua`, `item:grimoire`, `gate:thorns_throne`, `boss:groth`. El validador simula la progresión con esas fichas y avisa si algo queda inalcanzable.
+
+**Una página del grimorio.**
+
+```sh
+npm run encode-page -- page_nueva caesar "EL TEXTO SECRETO" 5
+npm run encode-page -- page_nueva atbash "EL TEXTO SECRETO"
+npm run encode-page -- page_nueva vigenere "EL TEXTO SECRETO" CLAVE
+npm run encode-page -- page_nueva runes "EL TEXTO SECRETO" iulin
+```
+
+Copiá `cipher`, `ciphertext` y `solutionHash` a `data/pages.json` y agregá el hechizo en `spells.json`. El texto original no se guarda: el juego compara el hash de la traducción del jugador. Para las páginas rúnicas, los murales (`clues.json`) enseñan palabras completas; `maxUnknown` fija cuántos signos puede tener que deducir el jugador.
+
+**Un enemigo o un jefe.** Los valores van en `enemies.json` o `bosses.json`. Los comportamientos (`melee`, `archer`) y los movimientos del jefe (`slash`, `leap`, `charge`) están en `src/entities/`; un comportamiento nuevo se agrega ahí y se referencia desde los datos.
+
+Después de cualquier cambio, `npm run check` confirma que todo sigue siendo alcanzable.
+
+## Guardado
+
+El guardado vive en el `localStorage` del navegador (clave `runas-rotas-save`) e incluye un número de versión. Las partidas de la versión 1 se migran automáticamente. Con almacenamiento bloqueado se puede jugar sin guardar.
 
 ## Publicación
 
-En GitHub: Settings → Pages → Source → GitHub Actions. El workflow .github/workflows/pages.yml publica cada push a main. Dirección prevista: https://dgIbanez.github.io/Jueguito2/ . Si Pages no estaba habilitado, elegir esa opción y volver a ejecutar el workflow.
-
-Los gráficos se dibujan en el juego; no requieren sprites externos. Las fuentes web tienen alternativas locales. Esta V1 es un prototipo jugable del primer capítulo. Los siguientes niveles, más movilidad y los cifrados base64 y hexadecimal quedan para futuras versiones.
-
-## Verificación
-
-Abrir tests/smoke.html desde un servidor estático local para ejecutar pruebas sobre colisiones, salto, combate, mejoras, investigación obligatoria, jefe, guardado, muerte y conexiones verticales. Las pruebas reemplazan el guardado del origen utilizado: usar un perfil de pruebas.
-
-## Presentación V1.1
-
-El juego ocupa toda la ventana manteniendo la proporción 16:9, con bandas cuando la pantalla tiene otra proporción. La portada y el menú de pausa contienen ayuda, sonido y pantalla completa. Los menús se recorren con flechas o Tab y se confirman con Enter. Se retiraron los controles táctiles y el contenido exterior al juego.
-
-## Combate y exploración V1.2
-
-El diario muestra únicamente salas visitadas y hallazgos obtenidos. Una página sin investigar no revela su hechizo. Las bajas normales se conservan entre salas y al recargar; descansar en un santuario o volver tras morir reinicia los enemigos comunes. El jefe derrotado no reaparece.
-
-Las muertes producen sangre, manchas por sala y una breve animación de caída. Las manchas duran hasta reiniciar los encuentros o recargar la partida. Las animaciones siguen dibujadas mediante Canvas, sin hojas de sprites: balanceo corporal, pasos, bufanda, postura de impulso y movimiento de armas durante preparación, ataque y recuperación. Las poses visuales no alteran las colisiones.
-
-## Arqueros e investigación V1.3
-
-Goblins arqueros en el sendero, las copas y el campamento. Anticipan el disparo tensando el arco y fijando la dirección antes de soltar la flecha; después quedan en recuperación. El suelo sólido detiene los proyectiles; las plataformas flotantes dejan pasar las flechas. El dash protege del impacto. Sus bajas siguen las mismas reglas de checkpoint que el resto de enemigos.
-
-La página incorpora una firma cifrada y un comentario del personaje sobre Iulin Saerh, escriba de la Torre Gris. El texto y la firma se traducen juntos con la rueda; ni la pista ni los intentos fallidos revelan el desplazamiento correcto.
-
-## Gestos y refuerzos V1.4
-
-Se eliminaron exclamaciones y nombres flotantes de ataques. El jefe anticipa el tajo levantando el arma y girando el cuerpo, el salto agachándose y la embestida inclinándose hacia delante. Las animaciones de los enemigos comunes se conservan.
-
-Al alcanzar el 50 % de salud, el jefe completa su aterrizaje si estaba en el aire y levanta el arma para llamar refuerzos: dos hobgoblins y dos arqueros, una sola vez por intento. Los refuerzos tienen una breve pausa inicial antes de atacar. Al derrotar al jefe se retiran los refuerzos y sus proyectiles; al reintentar se reinicia la invocación.
-
-## Presión de combate V1.5
-
-Las flechas atraviesan todas las plataformas flotantes, incluidas las del jefe, pero chocan con el suelo sólido. Goblins y hobgoblins detectan al jugador a 620 píxeles, frente a los 330 anteriores. La persecución sube de 70 a 205 píxeles/segundo para goblins y de 48 a 155 para hobgoblins (el jugador corre a 190).
-
-La preparación del ataque baja a 0,32 / 0,48 segundos y la recuperación a 0,42 / 0,70 segundos, respectivamente. Ambos avanzan durante el golpe, manteniendo la dirección que eligieron al prepararlo: esquivar sigue siendo posible, pero alejarse caminando ya no basta contra los goblins.
-
-## Persecución ajustada V1.6
-
-Goblins a 180 px/s y hobgoblins a 165 px/s, por debajo de los 190 del jugador; el avance al golpear usa esas mismas velocidades. Conservan el alcance de detección y las pausas de ataque de V1.5. Antes de moverse comprueban que haya suelo delante: se detienen en los bordes de plataformas y pozos, incluso durante el ataque, y retoman la persecución cuando el jugador vuelve al lado seguro.
-
-## Grimorio visual V1.7
-
-Tras obtener el grimorio, Tab abre un libro de cuero y pergamino con restos de hojas arrancadas. Las páginas recuperadas se incorporan al libro: permanecen cifradas hasta investigarlas. La página traducida de Ascua muestra su descripción, coste, daño y tecla de uso. Se conservan únicamente los lugares visitados y hallazgos conocidos. Antes de obtener el libro, Tab sigue mostrando las notas del viaje.
-
-Se quitaron los mensajes de ayuda al cambiar de zona. Las notificaciones de objetos obtenidos y checkpoints siguen disponibles.
-
-## Mapa independiente V1.8
-
-El mapa está tirado junto al punto inicial del personaje, a la derecha del santuario. Se recoge con E y se abre o cierra con M; Escape también lo cierra. La carta muestra únicamente salas visitadas, sus conexiones conocidas y la ubicación actual, sin revelar zonas futuras. Su adquisición se guarda con la partida. Las partidas anteriores pueden volver al inicio para recogerlo.
-
-Tab conserva el grimorio y las notas previas a encontrarlo, pero ya no contiene el mapa.
+En GitHub: Settings → Pages → Source → GitHub Actions. El workflow `.github/workflows/pages.yml` verifica tipos, datos, pruebas unitarias y de navegador en cada push o PR, y publica `dist/` solo desde `main`. Dirección: https://dgibanez.github.io/Jueguito2/

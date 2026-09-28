@@ -1,0 +1,10 @@
+{
+  "map": {
+    "name": "Mapa del caminante",
+    "pickup": "MAPA RECUPERADO · {map} para desplegarlo."
+  },
+  "grimoire": {
+    "name": "Grimorio antiguo",
+    "pickup": "GRIMORIO ANTIGUO · Buscá las páginas perdidas. {grimoire} para consultarlo."
+  }
+}

@@ -1,0 +1,20 @@
+{
+  "dash": {
+    "name": "Botas del viento",
+    "action": "dash",
+    "pickup": "BOTAS DEL VIENTO · {dash} para impulsarte, una vez por salto también en el aire.",
+    "description": "Un impulso breve que protege del daño durante el movimiento."
+  },
+  "wall_jump": {
+    "name": "Garras de raíz",
+    "action": "jump",
+    "pickup": "GARRAS DE RAÍZ · Contra una pared, mantené la dirección para deslizarte y {jump} para saltar.",
+    "description": "Permiten aferrarse a los muros y rebotar entre ellos."
+  },
+  "double_jump": {
+    "name": "Pluma del cuervo",
+    "action": "jump",
+    "pickup": "PLUMA DEL CUERVO · {jump} otra vez en el aire para un segundo salto.",
+    "description": "Un segundo impulso en el aire. Se renueva al tocar el suelo o una pared."
+  }
+}

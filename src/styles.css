@@ -1,0 +1,747 @@
+@import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@400;500;600&family=Noto+Sans+Runic&family=Space+Grotesk:wght@400;500;600&display=swap');
+
+:root {
+  color-scheme: dark;
+  --ink: #e5e9d5;
+  --muted: #bcc9ad;
+  --gold: #cfbd82;
+  --parchment: #d7c69a;
+  --leather: #392b20;
+  --runes: 'Noto Sans Runic', 'Segoe UI Historic', serif;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+/* The fixed 16:9 stage fits the window without cropping or stretching. */
+html,
+body {
+  width: 100%;
+  height: 100%;
+  margin: 0;
+  overflow: hidden;
+  background: #050e0a;
+  color: var(--ink);
+  font-family: 'Space Grotesk', sans-serif;
+}
+
+body {
+  display: grid;
+  place-items: center;
+}
+
+button {
+  font: inherit;
+  cursor: pointer;
+  color: inherit;
+}
+
+button:focus-visible,
+input:focus-visible {
+  outline: 2px solid #f5e4a3;
+  outline-offset: 4px;
+  box-shadow: 0 0 18px #dac47733;
+}
+
+#game {
+  position: relative;
+  width: min(100vw, 177.777778vh);
+  height: min(100vh, 56.25vw);
+  aspect-ratio: 16 / 9;
+  overflow: hidden;
+  background: #10251e;
+}
+
+canvas {
+  display: block;
+  width: 100%;
+  height: 100%;
+  image-rendering: pixelated;
+  outline: none;
+}
+
+/* HUD ------------------------------------------------------------------ */
+
+#hud {
+  position: absolute;
+  inset: 20px 24px auto;
+  display: flex;
+  justify-content: space-between;
+  pointer-events: none;
+}
+
+#hud[hidden],
+#bossbar[hidden] {
+  display: none;
+}
+
+small {
+  display: block;
+  font-size: 8px;
+  letter-spacing: 2px;
+  color: #bec8a5;
+}
+
+#health {
+  font-size: 22px;
+  color: #d88970;
+  letter-spacing: 4px;
+}
+
+#mana {
+  font-size: 10px;
+  color: #a2c6c0;
+  letter-spacing: 3px;
+}
+
+.location {
+  text-align: center;
+}
+
+.location strong {
+  display: block;
+  margin-top: 7px;
+  font: 15px Cinzel, serif;
+}
+
+.hud-keys {
+  font-size: 10px;
+  letter-spacing: 1px;
+  line-height: 1.9;
+  color: #bec8a5;
+  text-align: right;
+}
+
+#bossbar {
+  position: absolute;
+  bottom: 22px;
+  left: 25%;
+  width: 50%;
+  text-align: center;
+  font-size: 9px;
+  letter-spacing: 3px;
+  color: #e5caa6;
+}
+
+#bossbar > div {
+  height: 6px;
+  margin-top: 8px;
+  background: #181d14;
+  border: 1px solid #a58a5a88;
+}
+
+#bossbar i {
+  display: block;
+  height: 100%;
+  width: 100%;
+  background: #c47459;
+}
+
+#toast {
+  position: absolute;
+  bottom: 36px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: max-content;
+  max-width: 85%;
+  padding: 12px 18px;
+  background: #0c211dea;
+  border: 1px solid #b0b77266;
+  color: #e2dcac;
+  font-size: 12px;
+  text-align: center;
+  opacity: 0;
+  pointer-events: none;
+}
+
+#toast.show {
+  opacity: 1;
+}
+
+/* Menus ---------------------------------------------------------------- */
+
+#overlay {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  overflow: auto;
+  background: #061910b3;
+}
+
+#overlay:empty {
+  display: none;
+}
+
+.panel {
+  width: min(570px, 90%);
+  margin: auto;
+  text-align: center;
+}
+
+.eyebrow {
+  margin-bottom: 20px;
+  font-size: 9px;
+  letter-spacing: 4px;
+  color: #cfbb81;
+}
+
+.panel h1 {
+  margin: 0;
+  font: 500 clamp(30px, 5.8vw, 68px) / 1.06 Cinzel, serif;
+  letter-spacing: 5px;
+  color: #f0e8cb;
+  text-shadow: 0 4px 25px #0006;
+}
+
+.panel h2 {
+  margin: 8px 0 16px;
+  font: 500 28px Cinzel, serif;
+  color: #e9e2be;
+}
+
+.subtitle {
+  margin: 15px 0 20px;
+  font: 17px Cinzel, serif;
+  letter-spacing: 5px;
+  color: #bfcca7;
+}
+
+.ornament {
+  margin: 16px;
+  color: #d2bd7e;
+  letter-spacing: 15px;
+}
+
+.panel p {
+  max-width: 450px;
+  margin: 13px auto;
+  font-size: 12px;
+  line-height: 1.85;
+  color: var(--muted);
+}
+
+.panel .keys {
+  margin-top: 24px;
+  font-size: 9px;
+  letter-spacing: 1px;
+}
+
+.panel .credits {
+  margin-top: 18px;
+  font-size: 9px;
+  letter-spacing: 2px;
+  color: #99aa88;
+}
+
+.primary,
+.secondary {
+  margin: 5px;
+  padding: 13px 24px;
+  border: 1px solid #d3bf80;
+  background: var(--gold);
+  color: #19251a;
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 2px;
+}
+
+.secondary {
+  background: #10251ed9;
+  color: #dbd9b5;
+  border-color: #8b9e6555;
+}
+
+.menu-options {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  margin-top: 14px;
+}
+
+.menu-options button {
+  padding: 10px 14px;
+  font-size: 9px;
+}
+
+.bindings {
+  display: grid;
+  gap: 4px;
+  max-width: 420px;
+  margin: 0 auto 12px;
+}
+
+.bind-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 12px;
+  color: var(--muted);
+}
+
+.bind-row .bind {
+  min-width: 170px;
+  margin: 0;
+  padding: 7px 12px;
+}
+
+/* Research tools --------------------------------------------------------- */
+
+.cipher {
+  padding: 15px;
+  background: #071c16;
+  border: 1px solid #a4aa6555;
+  color: #e5d698;
+  font: 18px monospace;
+  letter-spacing: 3px;
+}
+
+.cipher.runes,
+.mural-glyphs {
+  font-family: var(--runes);
+  font-size: 24px;
+  letter-spacing: 6px;
+}
+
+.mural-glyphs {
+  padding: 12px;
+  color: #d9cf9e;
+  background: #283126;
+  border: 1px solid #6c765f;
+}
+
+.tool {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 15px;
+  font-size: 12px;
+}
+
+.tool button {
+  padding: 8px 18px;
+  background: #29452c;
+  border: 1px solid #758859;
+}
+
+.tool input {
+  margin-left: 10px;
+  padding: 7px 10px;
+  width: 170px;
+  background: #071c16;
+  border: 1px solid #758859;
+  color: #e5d698;
+  font: 16px monospace;
+  letter-spacing: 3px;
+  text-transform: uppercase;
+}
+
+.panel .decoded {
+  font: 18px monospace;
+  color: #d3e1a2;
+}
+
+.panel .alphabet {
+  font: 11px monospace;
+  letter-spacing: 2px;
+}
+
+.rune-grid {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 6px;
+  margin: 12px 0;
+}
+
+.rune-grid label {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  padding: 6px;
+  border: 1px solid #758859;
+  background: #0b2219;
+}
+
+.rune-grid label.known {
+  border-color: #cfbd82;
+}
+
+.rune-grid .glyph {
+  font: 22px var(--runes);
+  color: #e5d698;
+}
+
+.rune-grid input {
+  width: 28px;
+  padding: 3px;
+  text-align: center;
+  background: #071c16;
+  border: 1px solid #4e5f40;
+  color: #d3e1a2;
+  font: 15px monospace;
+  text-transform: uppercase;
+}
+
+/* Grimoire: an open leather book; torn stubs mark missing pages. -------- */
+
+.panel.book-panel {
+  width: min(880px, 96%);
+  max-width: 880px;
+}
+
+.grimoire {
+  position: relative;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  padding: 10px;
+  border: 3px solid #745032;
+  border-radius: 9px 14px 14px 9px;
+  background: var(--leather);
+  box-shadow: 0 18px 55px #000a, inset 0 0 0 3px #b18a4b55;
+  text-align: left;
+  animation: book-open 0.25s ease-out;
+}
+
+.book-page {
+  position: relative;
+  min-height: 390px;
+  padding: 24px 28px 34px;
+  color: #48351f;
+  background: repeating-linear-gradient(0deg, #72512705 0 1px, transparent 1px 5px), var(--parchment);
+}
+
+.left-page {
+  background-color: #d5c294;
+  box-shadow: inset -18px 0 25px -15px #4a301ac9;
+  border-radius: 3px 0 0 3px;
+}
+
+.right-page {
+  background-color: #e1d0a5;
+  box-shadow: inset 18px 0 25px -15px #4a301ac9;
+  border-radius: 0 3px 3px 0;
+}
+
+.book-page h2 {
+  margin: 12px 0;
+  font-size: 25px;
+  color: #4b3421;
+}
+
+.book-page small {
+  color: #7a5935;
+  letter-spacing: 1.5px;
+  font-size: 8px;
+}
+
+.book-page p {
+  color: #635033;
+  font: 14px/1.6 Georgia, serif;
+}
+
+.book-page .book-note {
+  font-size: 12px;
+  font-style: italic;
+}
+
+.book-seal {
+  margin: 6px;
+  font-size: 38px;
+  color: #967844;
+  text-align: center;
+}
+
+.spell-seal {
+  color: #a45029;
+  font-size: 50px;
+  text-align: center;
+  text-shadow: 0 0 20px #be682944;
+}
+
+.book-page blockquote {
+  margin: 8px 0 14px;
+  font: italic 17px Georgia, serif;
+  color: #71451f;
+}
+
+.book-page dl {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+  padding: 12px 0;
+  font-size: 11px;
+  border-block: 1px solid #8b693944;
+}
+
+.book-page dd {
+  margin: 0;
+  text-align: right;
+}
+
+.book-list {
+  margin: 6px 0 12px;
+  padding-left: 18px;
+  font: 12px/1.7 Georgia, serif;
+  color: #5b4630;
+}
+
+.clue-list .glyphs {
+  font-family: var(--runes);
+  letter-spacing: 3px;
+  color: #6c4530;
+}
+
+.page-index {
+  display: grid;
+  gap: 4px;
+  margin: 10px 0 12px;
+}
+
+.page-link {
+  padding: 6px 10px;
+  border: 1px solid #8b693955;
+  background: #c9b684;
+  color: #4b3421;
+  font: 12px Georgia, serif;
+  text-align: left;
+}
+
+.page-link.current {
+  border-color: #825c30;
+  background: #e6d6ab;
+}
+
+.page-number {
+  position: absolute;
+  bottom: 12px;
+  left: 50%;
+  color: #927547;
+  font: 11px Georgia, serif;
+}
+
+.torn-stubs {
+  position: absolute;
+  z-index: 2;
+  left: 49%;
+  top: 12px;
+  bottom: 12px;
+  width: 30px;
+  pointer-events: none;
+}
+
+.torn-stubs i {
+  position: absolute;
+  inset: 0;
+  background: #bca477;
+  clip-path: polygon(0 0, 65% 0, 44% 7%, 80% 13%, 48% 19%, 72% 25%, 35% 32%, 85% 40%, 44% 49%, 70% 56%, 35% 63%, 80% 70%, 45% 80%, 78% 88%, 50% 95%, 65% 100%, 0 100%);
+  filter: drop-shadow(2px 0 1px #4d351c);
+}
+
+.torn-stubs i:nth-child(2) {
+  transform: translateX(5px) scaleY(0.98);
+  background: #cbb88a;
+}
+
+.torn-stubs i:nth-child(3) {
+  transform: translateX(10px) scaleY(0.96);
+  background: #d8c79c;
+}
+
+.torn-stubs i:nth-child(4) {
+  transform: translateX(15px) scaleY(0.94);
+  background: #e3d2a8;
+}
+
+.missing {
+  text-align: center;
+  background-color: #aa9063;
+}
+
+.missing-leaf {
+  height: 110px;
+  margin: 25px 0 15px;
+  border: 1px dashed #69513055;
+  clip-path: polygon(0 5%, 80% 0, 100% 20%, 83% 32%, 99% 45%, 78% 60%, 100% 76%, 85% 100%, 0 94%);
+  background: #c9b481;
+}
+
+.book-runes {
+  margin-top: 16px;
+  padding: 14px 0;
+  font: 18px/2 monospace;
+  letter-spacing: 3px;
+  text-align: center;
+  color: #6c4530;
+  border-block: 1px solid #80613b44;
+}
+
+.book-page .primary {
+  margin: 15px 0;
+  background: #775530;
+  color: #f2dfb2;
+  border-color: #593e24;
+  font-size: 9px;
+}
+
+.restored {
+  clip-path: polygon(1% 0, 100% 0, 100% 100%, 1% 100%, 3% 89%, 0 76%, 3% 64%, 1% 48%, 3% 36%, 0 22%);
+}
+
+@keyframes book-open {
+  from {
+    opacity: 0;
+    transform: perspective(1000px) rotateX(8deg) scale(0.96);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+/* Map ------------------------------------------------------------------ */
+
+.panel.map-panel {
+  width: min(820px, 96%);
+  max-width: 820px;
+}
+
+.world-map {
+  padding: 26px;
+  background: repeating-linear-gradient(90deg, transparent 0 32%, #604b2810 33%, transparent 34%), #d4c392;
+  border: 7px solid #8c7044;
+  box-shadow: 0 15px 55px #0009, inset 0 0 45px #84633555;
+  color: #503d27;
+}
+
+.world-map h2 {
+  color: #503d27;
+}
+
+.world-map small {
+  color: #7b5f38;
+}
+
+.world-map p {
+  font: italic 14px Georgia, serif;
+  color: #705837;
+}
+
+.map-chart svg {
+  display: block;
+  width: 100%;
+  max-height: 46vh;
+  margin: 10px 0;
+}
+
+.map-room rect {
+  fill: #d9c99e;
+  stroke: #856a41;
+  stroke-width: 8;
+}
+
+.map-room.current rect {
+  fill: #e8d7a9;
+  stroke: #885035;
+  stroke-width: 14;
+}
+
+.map-room text {
+  fill: #503d27;
+  font-family: Georgia, serif;
+  text-anchor: middle;
+  dominant-baseline: middle;
+}
+
+.map-room text.here {
+  fill: #914e30;
+  font-family: 'Space Grotesk', sans-serif;
+  letter-spacing: 4px;
+}
+
+.map-shrine {
+  fill: #7fae86;
+}
+
+.map-player {
+  fill: #914e30;
+  stroke: #f2dfb2;
+  stroke-width: 6;
+}
+
+.world-map .primary {
+  background: #715334;
+  color: #f2dfb2;
+  border-color: #593e24;
+}
+
+/* Short windows ----------------------------------------------------------- */
+
+@media (max-height: 650px) {
+  #overlay {
+    padding: 12px;
+  }
+  .panel h1 {
+    font-size: 46px;
+  }
+  .eyebrow {
+    margin-bottom: 10px;
+  }
+  .subtitle {
+    margin: 10px 0;
+  }
+  .ornament {
+    margin: 9px;
+  }
+  .panel p {
+    margin: 9px auto;
+  }
+  .panel .keys {
+    margin-top: 12px;
+  }
+  .menu-options {
+    margin-top: 6px;
+  }
+  .primary,
+  .secondary {
+    padding: 10px 18px;
+  }
+  .book-page {
+    min-height: 310px;
+    padding: 16px 22px 26px;
+  }
+  .book-page h2 {
+    font-size: 21px;
+    margin: 8px 0;
+  }
+  .book-page p {
+    font-size: 12px;
+  }
+  .book-seal {
+    font-size: 26px;
+    margin: 4px;
+  }
+  .spell-seal {
+    font-size: 32px;
+  }
+  .missing-leaf {
+    height: 80px;
+  }
+  .book-page dl {
+    gap: 5px;
+    padding: 8px 0;
+  }
+  .world-map {
+    padding: 16px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .grimoire {
+    animation: none;
+  }
+}
