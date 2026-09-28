@@ -387,6 +387,54 @@ small {
   text-transform: uppercase;
 }
 
+/* Research screen: known signatures and mural words, next to the cipher. */
+.panel.cipher-panel {
+  width: min(940px, 97%);
+  max-width: 940px;
+}
+
+.cipher-layout {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 20px;
+  text-align: center;
+}
+
+.cipher-layout.with-aside {
+  grid-template-columns: 1fr 230px;
+  align-items: start;
+}
+
+.cipher-aside {
+  padding: 14px 16px;
+  background: #0b2219;
+  border: 1px solid #4e5f40;
+  color: var(--muted);
+  font-size: 11px;
+  line-height: 1.6;
+  text-align: left;
+}
+
+.cipher-aside section + section {
+  margin-top: 14px;
+}
+
+.cipher-aside h3 {
+  margin: 0 0 6px;
+  font-size: 9px;
+  letter-spacing: 2px;
+  color: #cfbb81;
+}
+
+.cipher-aside ul {
+  margin: 0;
+  padding-left: 16px;
+}
+
+.cipher-aside li {
+  margin: 3px 0;
+}
+
 /* Grimoire: an open leather book; torn stubs mark missing pages. -------- */
 
 .panel.book-panel {

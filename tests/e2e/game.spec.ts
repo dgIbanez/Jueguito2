@@ -138,6 +138,50 @@ test('rune page: murals fill in glyphs and the player deduces the rest', async (
   await expect(page.locator('#toast')).toContainText('ÉGIDA DE RUNAS');
 });
 
+test('research sidebar shows earned murals only, never another page\'s signature', async ({ page }) => {
+  await startGame(page);
+  await page.evaluate(() => {
+    const { game } = (window as any).runas;
+    game.progress.items.add('grimoire');
+    game.progress.pages.set('page_ascua', { solved: false });
+    game.progress.pages.set('page_egida', { solved: false });
+  });
+
+  // The Caesar page never gets a rune sidebar.
+  await page.keyboard.press('Tab');
+  await page.locator('.page-link[data-page="page_ascua"]').click();
+  await page.locator('#research').click();
+  await expect(page.locator('.cipher-aside')).toHaveCount(0);
+  for (let i = 0; i < 3; i++) await page.locator('#plus').click();
+  await expect(page.locator('.signature')).toHaveText('— IULIN SAERH');
+  await page.locator('#solve').click();
+
+  // Deciphering the rune page shows murals already read, but not Ascua's signature:
+  // comparing signatures is left to the player's own memory, not auto-solved.
+  await page.evaluate(() => (window as any).runas.game.progress.clues.add('mural_runa'));
+  await page.keyboard.press('Tab');
+  await page.locator('.page-link[data-page="page_egida"]').click();
+  await page.locator('#research').click();
+  await expect(page.locator('.cipher-aside')).toBeVisible();
+  await expect(page.locator('.cipher-aside')).toContainText('RUNA');
+  await expect(page.locator('.cipher-aside')).not.toContainText('IULIN SAERH');
+  await page.screenshot({ path: 'test-results/screens/cipher-aside.png' });
+});
+
+test('a solved page keeps its discovery note and signature in the grimoire', async ({ page }) => {
+  await startGame(page);
+  await page.evaluate(() => {
+    const { game } = (window as any).runas;
+    game.progress.items.add('grimoire');
+    game.progress.pages.set('page_ascua', { solved: true, key: { shift: 3 } });
+  });
+  await page.keyboard.press('Tab');
+  await expect(page.locator('.right-page')).toContainText('Ascua');
+  await expect(page.locator('.right-page')).toContainText('Iulin Saerh');
+  await expect(page.locator('.right-page')).toContainText('IULIN SAERH');
+  await page.screenshot({ path: 'test-results/screens/grimoire-solved-page.png' });
+});
+
 test('keys can be rebound and are remembered', async ({ page }) => {
   await startGame(page);
   await page.keyboard.press('Escape');

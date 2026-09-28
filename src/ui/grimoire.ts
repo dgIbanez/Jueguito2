@@ -28,10 +28,13 @@ function rightPage(game: Game, input: Input, pageId: string): { html: string; cl
   const spell = game.content.spells[page.spell];
   const slot = spell.slot === 1 ? 'spell1' : 'spell2';
   const stats = spell.stats.map(([k, v]) => `<dt>${esc(k)}</dt><dd>${esc(v)}</dd>`).join('');
+  const key = state.key ?? {};
+  // Once the page is fully solved, its own note and signature are fair game.
+  const signature = page.signature ? game.readPage(page, key, page.signature) : '';
   return {
     cls: 'restored',
     numeral: page.numeral,
-    html: `<small>PÁGINA RECUPERADA · TRADUCIDA</small><h2>${esc(spell.name)}</h2><div class="spell-seal" aria-hidden="true">✦</div><blockquote>${esc(sentence(game.readPage(page, state.key ?? {})))}</blockquote><p>${esc(spell.description)}</p><dl><dt>Invocación</dt><dd>${esc(input.label(slot))}</dd>${stats}</dl><p class="book-note">Los golpes de espada que aciertan recuperan magia.</p>`,
+    html: `<small>PÁGINA RECUPERADA · TRADUCIDA</small><h2>${esc(spell.name)}</h2><div class="spell-seal" aria-hidden="true">✦</div><p class="book-note">${esc(page.note)}</p><blockquote>${esc(sentence(game.readPage(page, key)))}</blockquote>${signature ? `<p class="book-note">— ${esc(signature)}</p>` : ''}<p>${esc(spell.description)}</p><dl><dt>Invocación</dt><dd>${esc(input.label(slot))}</dd>${stats}</dl><p class="book-note">Los golpes de espada que aciertan recuperan magia.</p>`,
   };
 }
 

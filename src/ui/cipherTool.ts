@@ -25,13 +25,36 @@ function toolHtml(game: Game, page: PageDef, key: CipherKey): string {
   }
 }
 
+/**
+ * Sidebar of words the player already earned from murals, so investigating a
+ * rune page doesn't require leaving the screen to go check the grimoire.
+ * It never reveals a solution the player hasn't read themselves elsewhere:
+ * comparing this page's signature against another page's is left to the
+ * player's own memory, by visiting that page's grimoire entry.
+ */
+function referenceHtml(game: Game, current: PageDef): string {
+  if (current.cipher.type !== 'runes') return '';
+  const script = current.cipher.script;
+  const learned = game.content.clues.filter((c) => c.script === script && game.progress.clues.has(c.id));
+  if (!learned.length) return '';
+  const rows = learned.map((c) => `<li>${esc(c.title)}: <strong>${esc(c.word)}</strong></li>`).join('');
+  return `<aside class="cipher-aside"><section><h3>SIGNOS APRENDIDOS</h3><ul>${rows}</ul></section></aside>`;
+}
+
 export function cipherHtml(game: Game, page: PageDef, key: CipherKey): string {
   const reading = game.readPage(page, key);
   const signature = page.signature ? game.readPage(page, key, page.signature) : '';
-  return `<div class="eyebrow">GRIMORIO / PÁGINA ${esc(page.numeral)}</div><h2>${esc(page.title)}</h2><p><em>${esc(page.note)}</em></p>
-<div class="cipher ${page.cipher.type}">${esc(page.ciphertext)}${page.signature ? `<small>— ${esc(page.signature)}</small>` : ''}</div>
-${toolHtml(game, page, key)}
-<p class="decoded">${esc(reading)}</p>${signature ? `<p class="signature">— ${esc(signature)}</p>` : ''}
+  const aside = referenceHtml(game, page);
+  return `<div class="eyebrow">GRIMORIO / PÁGINA ${esc(page.numeral)}</div><h2>${esc(page.title)}</h2>
+<div class="cipher-layout${aside ? ' with-aside' : ''}">
+  <div class="cipher-main">
+    <p><em>${esc(page.note)}</em></p>
+    <div class="cipher ${page.cipher.type}">${esc(page.ciphertext)}${page.signature ? `<small>— ${esc(page.signature)}</small>` : ''}</div>
+    ${toolHtml(game, page, key)}
+    <p class="decoded">${esc(reading)}</p>${signature ? `<p class="signature">— ${esc(signature)}</p>` : ''}
+  </div>
+  ${aside}
+</div>
 <button class="primary" id="solve">INSCRIBIR TRADUCCIÓN</button><button class="secondary" id="back">MÁS TARDE</button><p id="feedback" role="status"></p>`;
 }
 
