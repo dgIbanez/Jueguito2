@@ -34,7 +34,7 @@ test('title screen works with the keyboard only', async ({ page }) => {
   await expect(page.locator('#help')).toBeFocused();
   await page.keyboard.press('Enter');
   await expect(page.locator('#controls')).toBeVisible();
-  await expect(page.locator('#sound')).toHaveText(/SONIDO/);
+  await expect(page.locator('#audio')).toHaveText('AUDIO');
   await page.keyboard.press('Escape');
   await expect(page.locator('#start')).toBeVisible();
   await page.screenshot({ path: 'test-results/screens/title.png' });
@@ -334,4 +334,48 @@ test('boss rigs animate every attack', async ({ page }) => {
   for (const [move, state, t] of [['eruption', 'wind', 1], ['eruption', 'strike', 0.5], ['rain', 'wind', 1], ['beam', 'wind', 1], ['roll', 'strike', 0.3], ['shatter', 'wind', 1]] as const)
     await shoot('Corazon', move, state, t, `vharn-${move}-${state}`);
   await shoot('Corazon', 'beam', 'transition', 0.6, 'vharn-roar', 1);
+});
+
+test('hitting the thorns shows the player\'s thought', async ({ page }) => {
+  await startGame(page);
+  await page.evaluate(() => {
+    const { game } = (window as any).runas;
+    game.enterRoom('Trono', 100, 448);
+    game.player.face = 1;
+  });
+  await page.keyboard.press('KeyJ');
+  await expect(page.locator('#toast')).toHaveClass(/thought/);
+  await expect(page.locator('#toast')).toContainText('esperaran una chispa');
+  await page.screenshot({ path: 'test-results/screens/thorns-thought.png' });
+});
+
+test('audio: music follows the game and volumes are set with the keyboard', async ({ page }) => {
+  const track = () => page.evaluate(() => (window as any).runas.audio.playing?.name ?? null);
+  // The first key press unlocks audio; the title theme starts.
+  await page.keyboard.press('ArrowDown');
+  await expect.poll(() => page.evaluate(() => (window as any).runas.audio.ctx?.state)).toBe('running');
+  await expect.poll(track).toBe('title');
+
+  await page.locator('#audio').focus();
+  await page.keyboard.press('Enter');
+  await expect(page.locator('#overlay')).toContainText('Sonido y música');
+  await page.locator('#music-down').focus();
+  await page.keyboard.press('Enter');
+  await expect(page.locator('#music-down')).toBeFocused();
+  await expect(page.locator('#overlay')).toContainText('50%');
+  await page.screenshot({ path: 'test-results/screens/audio.png' });
+  expect(await page.evaluate(() => JSON.parse(localStorage.getItem('runas-rotas-settings')!).audio.music)).toBe(0.5);
+  await page.locator('#back').click();
+
+  await startGame(page);
+  await expect.poll(track).toBe('forest');
+  await page.evaluate(() => {
+    const { game } = (window as any).runas;
+    game.progress.flags.add('gate:thorns_throne');
+    game.enterRoom('Trono', 120, 448);
+    game.player.inv = 99;
+  });
+  await expect.poll(track).toBe('groth');
+  await page.keyboard.press('KeyJ');
+  await page.waitForTimeout(500);
 });

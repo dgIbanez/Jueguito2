@@ -105,6 +105,7 @@ const MOVES: Record<string, { wind?: Hook; start: Hook; update: Hook }> = {
   throw: {
     start(e, m, ctx, enraged) {
       const speed = tune(m, 'speed', enraged, 430);
+      ctx.sound('swing', centerX(e));
       ctx.fireArrow({ x: centerX(e) + e.lock * 30 - 13, y: e.y + e.h * 0.35, w: 26, h: 26, vx: e.lock * speed, vy: 0, ax: -e.lock * (m.accel ?? 560), life: 2.6, pass: true, spin: true });
     },
     update(e) {
@@ -123,6 +124,7 @@ const MOVES: Record<string, { wind?: Hook; start: Hook; update: Hook }> = {
         const speed = tune(m, 'wave', enraged, 220);
         for (const dir of [-1, 1]) ctx.spawnWave({ x: centerX(e), y: e.y + e.h - 22, w: 24, h: 22, vx: dir * speed, life: 3 });
         ctx.shake(0.3);
+        ctx.sound('slam', centerX(e));
         e.timer = 0;
       }
     },
@@ -146,6 +148,7 @@ const MOVES: Record<string, { wind?: Hook; start: Hook; update: Hook }> = {
   rain: {
     start(e, m, ctx, enraged) {
       crystalRain(ctx, tune(m, 'count', enraged, 5), tune(m, 'speed', enraged, 300));
+      ctx.sound('crystalRain', centerX(e));
       e.vx = 0;
     },
     update(e) {
@@ -156,6 +159,7 @@ const MOVES: Record<string, { wind?: Hook; start: Hook; update: Hook }> = {
   eruption: {
     start(e, m, ctx, enraged) {
       ctx.shake(0.2);
+      ctx.sound('eruption', centerX(e));
       erupt(ctx, e.y + e.h, centerX(e), e.lock, m, tune(m, 'count', enraged, 6));
     },
     update(e) {
@@ -172,8 +176,9 @@ const MOVES: Record<string, { wind?: Hook; start: Hook; update: Hook }> = {
       const windup = tune(m, 'windup', enraged, 1);
       ctx.addHazard({ kind: 'beam', x, y, w, h: height, delay: windup, life: m.duration, max: m.duration });
     },
-    start(_e, _m, ctx) {
+    start(e, _m, ctx) {
       ctx.shake(0.25);
+      ctx.sound('beam', centerX(e));
     },
     update(e) {
       e.face = e.lock;
@@ -196,6 +201,7 @@ const MOVES: Record<string, { wind?: Hook; start: Hook; update: Hook }> = {
         }
         crystalRain(ctx, 6, 340);
         ctx.shake(0.5);
+        ctx.sound('slam', centerX(e));
         e.timer = 0;
       }
     },
@@ -218,7 +224,7 @@ export function updateBoss(e: Enemy, ctx: BossContext): void {
     b.guard = next.transition?.kind === 'roar';
     e.vx = 0;
     setState(e, 'transition', next.transition?.time ?? 0.8);
-    ctx.sound(b.guard ? 60 : 75, 0.6, 'sawtooth');
+    ctx.sound(b.guard ? 'roar' : 'summon', centerX(e));
     ctx.shake(b.guard ? 0.8 : 0.2);
   }
   if (e.state === 'transition') {
@@ -240,10 +246,11 @@ export function updateBoss(e: Enemy, ctx: BossContext): void {
     e.lock = e.face;
     setState(e, 'wind', tune(next, 'windup', enraged, 0.9));
     MOVES[b.move]?.wind?.(e, next, ctx, enraged);
+    ctx.sound(b.move === 'beam' ? 'beamCharge' : 'bossWind', centerX(e));
   } else if (e.state === 'wind' && e.timer <= 0) {
     setState(e, 'strike', move.duration);
     MOVES[b.move]?.start(e, move, ctx, enraged);
-    ctx.sound(95, 0.2, 'sawtooth');
+    ctx.sound('bossStrike', centerX(e));
   } else if (e.state === 'strike') {
     MOVES[b.move]?.update(e, move, ctx, enraged);
     if (e.timer <= 0) setState(e, 'recover', tune(move, 'recover', enraged, 1));

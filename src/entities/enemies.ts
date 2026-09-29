@@ -2,6 +2,7 @@ import type { ArcherDef, EnemyDef, FlyerDef, MeleeDef } from '../content/types.t
 import { centerX, centerY, overlap, type Rect } from '../core/math.ts';
 import { supportedAt, type Body } from '../world/collision.ts';
 import { Tile, type RoomData } from '../world/ldtk.ts';
+import type { SfxName } from '../audio/names.ts';
 import type { BossState } from './boss.ts';
 import type { Player } from './player.ts';
 
@@ -59,7 +60,7 @@ export interface EnemyContext {
   room: RoomData;
   hurtPlayer(sourceX: number): void;
   fireArrow(arrow: Arrow): void;
-  sound(freq: number, duration: number, type?: OscillatorType): void;
+  sound(name: SfxName, x?: number): void;
 }
 
 export function createEnemy(kind: string, def: EnemyDef, ax: number, ay: number, id: string | null): Enemy {
@@ -97,7 +98,7 @@ export function updateFlyer(e: Enemy, def: FlyerDef, ctx: EnemyContext, time: nu
     if (e.timer <= 0) {
       e.state = 'strike';
       e.timer = def.swoop;
-      ctx.sound(640, 0.1, 'square');
+      ctx.sound('batSwoop', centerX(e));
     }
   } else if (e.state === 'strike') {
     e.face = e.lock;
@@ -165,7 +166,7 @@ export function updateArcher(e: Enemy, def: ArcherDef, ctx: EnemyContext): void 
       ctx.fireArrow({ x: centerX(e) + e.aim.x * 18, y: e.y + 16 + e.aim.y * 18, w: 8, h: 6, vx: e.aim.x * def.arrowSpeed, vy: e.aim.y * def.arrowSpeed, life: 3 });
       e.state = 'recover';
       e.timer = def.recover;
-      ctx.sound(460, 0.08);
+      ctx.sound('bowShot', centerX(e));
     }
   } else if (e.state === 'recover' && e.timer <= 0) {
     e.state = 'idle';

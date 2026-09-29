@@ -1,0 +1,16 @@
+{
+  "thorns_throne": {
+    "name": "Zarzas antiguas",
+    "hit": "«Las zarzas no ceden al acero. Están secas, casi quebradizas… como si esperaran una chispa».",
+    "recall": "«La llama abre el camino»… Las zarzas secas del trono. Este fuego podría abrirlas."
+  },
+  "velo_cristal": {
+    "name": "Velo de cristal",
+    "hit": "«El cristal vibra con cada golpe, pero no se quiebra. Zumba como si esperara un viento fuerte».",
+    "recall": "«El viento aparta lo que se acerca»… El velo de cristal de la grieta zumbaba como si esperara esto."
+  },
+  "trono_hatch": {
+    "name": "Losa sellada",
+    "hit": "«La losa lleva el mismo signo que la corona de Groth. No va a ceder mientras él reine»."
+  }
+}

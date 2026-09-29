@@ -20,6 +20,9 @@ const content = {
   clues: read('clues.json'),
   scripts: read('scripts.json'),
   story: read('story.json'),
+  sfx: read('sfx.json'),
+  music: read('music.json'),
+  gates: read('gates.json'),
   rigs: read('rigs.json'),
 } as Content;
 

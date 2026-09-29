@@ -7,6 +7,7 @@
     "hp": 32,
     "shards": 25,
     "reward": "sello_bosque",
+    "music": ["groth", "groth2"],
     "phases": [
       { "at": 1, "pattern": ["slash", "throw", "leap", "charge"] },
       {
@@ -44,6 +45,7 @@
     "hp": 48,
     "shards": 40,
     "reward": "sello_caverna",
+    "music": ["vharn", "vharn2"],
     "phases": [
       { "at": 1, "pattern": ["eruption", "rain", "leap", "beam", "roll"] },
       {

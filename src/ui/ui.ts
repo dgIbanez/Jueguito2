@@ -1,6 +1,6 @@
-import { PLAYER } from '../config.ts';
+import type { AudioEngine } from '../audio/engine.ts';
+import { PLAYER, VIEW_W } from '../config.ts';
 import type { BossDef } from '../content/types.ts';
-import type { Sound } from '../core/audio.ts';
 import { ACTIONS, RESERVED, SPELL_ACTIONS, type Action, type Input } from '../core/input.ts';
 import type { KeyValueStorage } from '../core/save.ts';
 import { defaultBindings, saveSettings, type Settings } from '../core/settings.ts';
@@ -20,6 +20,7 @@ export class Ui {
   private readonly overlay = $('#overlay')!;
   private readonly toastEl = $('#toast')!;
   private toastTimer = 0;
+  private toastQueue: string[] = [];
   private hudCache = '';
   private rebinding: Action | null = null;
   private rebindBack: () => void = () => this.resume();
@@ -29,23 +30,24 @@ export class Ui {
   private readonly game: Game;
   private readonly input: Input;
   private readonly settings: Settings;
-  private readonly sound: Sound;
+  private readonly audio: AudioEngine;
   private readonly storage: KeyValueStorage | null;
   private readonly canvas: HTMLCanvasElement;
 
-  constructor(game: Game, input: Input, settings: Settings, sound: Sound, storage: KeyValueStorage | null, canvas: HTMLCanvasElement) {
+  constructor(game: Game, input: Input, settings: Settings, audio: AudioEngine, storage: KeyValueStorage | null, canvas: HTMLCanvasElement) {
     this.game = game;
     this.input = input;
     this.settings = settings;
-    this.sound = sound;
+    this.audio = audio;
     this.storage = storage;
     this.canvas = canvas;
     game.events.on('toast', (text) => this.toast(text));
-    game.events.on('sound', ({ freq, duration, type }) => sound.beep(freq, duration, type));
+    // Sounds pan toward the side of the screen where they happen.
+    game.events.on('sound', ({ name, x }) => audio.play(name, x === undefined ? 0 : ((x - game.camera.x) / VIEW_W) * 1.4 - 0.7));
     game.events.on('room', (room) => {
       $('#zone')!.textContent = room.name;
       $('#region')!.textContent = room.biome === 'caves' ? 'CAVERNAS DEL ECO' : 'BOSQUE DE LAS RUNAS ROTAS';
-      this.hideToast();
+      this.hideToast(true);
     });
     game.events.on('dead', () => this.death());
     game.events.on('victory', (def) => this.victory(def));
@@ -68,18 +70,32 @@ export class Ui {
 
   private on(selector: string, handler: () => void): void {
     const el = $(selector, this.overlay);
-    if (el) el.onclick = handler;
+    if (el)
+      el.onclick = () => {
+        this.audio.play('menu');
+        handler();
+      };
   }
 
+  /** Shows a notification; while one is on screen, the next waits its turn. */
   toast(text: string): void {
+    if (this.toastTimer > 0) {
+      this.toastQueue.push(text);
+      return;
+    }
     this.toastEl.textContent = this.keys(text);
+    // The player's own thoughts are quoted and shown in italics.
+    this.toastEl.classList.toggle('thought', text.startsWith('«'));
     this.toastEl.classList.add('show');
     this.toastTimer = 5;
   }
 
-  private hideToast(): void {
+  private hideToast(clearQueue = false): void {
     this.toastTimer = 0;
     this.toastEl.classList.remove('show');
+    if (clearQueue) this.toastQueue = [];
+    const next = this.toastQueue.shift();
+    if (next) this.toast(next);
   }
 
   resume(): void {
@@ -89,18 +105,48 @@ export class Ui {
     this.canvas.focus();
   }
 
-  private bindOptions(): void {
-    const sound = $('#sound', this.overlay);
-    if (sound) {
-      sound.textContent = `SONIDO: ${this.settings.sound ? 'ON' : 'OFF'}`;
-      sound.onclick = () => {
-        this.settings.sound = this.sound.enabled = !this.settings.sound;
-        saveSettings(this.storage, this.settings);
-        sound.textContent = `SONIDO: ${this.settings.sound ? 'ON' : 'OFF'}`;
-        this.sound.beep(650);
-      };
-    }
+  /** Shared menu buttons: audio settings and fullscreen. `back` returns from the audio panel. */
+  private bindOptions(back: () => void): void {
+    this.on('#audio', () => this.audioPanel(back));
     this.on('#fullscreen', () => void this.toggleFullscreen());
+  }
+
+  /** Mute switch and music/effects volumes, in steps of 10 %. */
+  private audioPanel(back: () => void, focus?: string): void {
+    const a = this.settings.audio;
+    const level = (v: number) => {
+      const n = Math.round(v * 10);
+      return `<span class="level" aria-hidden="true">${'▮'.repeat(n)}${'▯'.repeat(10 - n)}</span> ${n * 10}%`;
+    };
+    const row = (id: 'music' | 'sfx', label: string) =>
+      `<div class="bind-row"><span>${label}</span><span class="volume"><button class="secondary" id="${id}-down" aria-label="Bajar ${label.toLowerCase()}">−</button>${level(a[id])}<button class="secondary" id="${id}-up" aria-label="Subir ${label.toLowerCase()}">+</button></span></div>`;
+    this.panel(
+      `<div class="eyebrow">AUDIO</div><h2>Sonido y música</h2><div class="bindings">
+<div class="bind-row"><span>Sonido</span><button class="secondary bind" id="audio-toggle">${a.enabled ? 'ACTIVADO' : 'SILENCIADO'}</button></div>
+${row('music', 'Música')}${row('sfx', 'Efectos')}</div>
+<p class="keys">↑ ↓ · ELEGIR &nbsp; ENTER · CAMBIAR</p><button class="primary" id="back">VOLVER</button>`,
+      '',
+      !focus,
+    );
+    if (focus) $<HTMLElement>(focus, this.overlay)?.focus();
+    const change = (update: () => void, id: string, preview: 'menu' | 'swing' = 'menu') => {
+      update();
+      this.audio.apply(this.settings.audio);
+      saveSettings(this.storage, this.settings);
+      this.audioPanel(back, `#${id}`);
+      this.audio.play(preview);
+    };
+    const step = (v: number, d: number) => Math.round(Math.min(1, Math.max(0, v + d)) * 10) / 10;
+    const bind = (id: string, update: () => void, preview?: 'swing') => {
+      const el = $(`#${id}`, this.overlay);
+      if (el) el.onclick = () => change(update, id, preview);
+    };
+    bind('audio-toggle', () => (a.enabled = !a.enabled));
+    bind('music-down', () => (a.music = step(a.music, -0.1)));
+    bind('music-up', () => (a.music = step(a.music, 0.1)));
+    bind('sfx-down', () => (a.sfx = step(a.sfx, -0.1)), 'swing');
+    bind('sfx-up', () => (a.sfx = step(a.sfx, 0.1)), 'swing');
+    this.on('#back', back);
   }
 
   async toggleFullscreen(): Promise<void> {
@@ -122,9 +168,9 @@ export class Ui {
     this.panel(`<div class="eyebrow">UNA AVENTURA DE ESPADA Y CONOCIMIENTO</div><h1>RUNAS<br>ROTAS</h1><div class="subtitle">EL BOSQUE OLVIDADO</div><div class="ornament">─ ◇ ─</div>
 <p>Bajo las raíces duerme un lenguaje perdido.<br>Encontrá sus páginas. Despertá su magia.</p>
 <button class="primary" id="start">${saved ? 'CONTINUAR EL VIAJE' : 'ENTRAR AL BOSQUE'} →</button>${saved ? '<button class="secondary" id="new">NUEVA PARTIDA</button>' : ''}
-<div class="menu-options"><button class="secondary" id="help">CONTROLES</button><button class="secondary" id="sound"></button><button class="secondary" id="fullscreen">F · PANTALLA COMPLETA</button></div>
+<div class="menu-options"><button class="secondary" id="help">CONTROLES</button><button class="secondary" id="audio">AUDIO</button><button class="secondary" id="fullscreen">F · PANTALLA COMPLETA</button></div>
 <p class="keys">↑ ↓ / TAB · ELEGIR &nbsp; ENTER · CONFIRMAR</p><p class="credits">CAPÍTULOS I–II · VERSIÓN 3.0 · SOLO TECLADO</p>`);
-    this.bindOptions();
+    this.bindOptions(() => this.title());
     this.on('#help', () => this.help());
     this.on('#start', () => this.start(false));
     this.on('#new', () => {
@@ -184,9 +230,9 @@ export class Ui {
     this.panel(`<div class="eyebrow">UN RESPIRO ENTRE LAS RAÍCES</div><h2>El bosque puede esperar</h2>
 <p>${k('left')} / ${k('right')} · Moverse &nbsp; ${k('jump')} · Saltar (mantener para más altura)<br>${k('attack')} · Espada &nbsp; ${k('down')} + ${k('attack')} en el aire · Golpe descendente<br>${k('down')} + ${k('jump')} · Bajar de una plataforma &nbsp; ${k('dash')} · Impulso<br>${SPELL_ACTIONS.map(k).join(' / ')} · Magias equipadas &nbsp; ${k('interact')} · Interactuar<br>${k('grimoire')} · Grimorio &nbsp; ${k('map')} · Mapa &nbsp; Esc · Pausa</p>
 <p>La espada restaura magia al acertar. El golpe descendente rebota sobre enemigos y zarzas. Los santuarios curan, guardan y permiten preparar, mejorar y fusionar tus magias.</p>
-<button class="primary" id="back">VOLVER</button><div class="menu-options"><button class="secondary" id="controls">REASIGNAR TECLAS</button><button class="secondary" id="sound"></button><button class="secondary" id="fullscreen">F · PANTALLA COMPLETA</button></div>`);
-    this.bindOptions();
+<button class="primary" id="back">VOLVER</button><div class="menu-options"><button class="secondary" id="controls">REASIGNAR TECLAS</button><button class="secondary" id="audio">AUDIO</button><button class="secondary" id="fullscreen">F · PANTALLA COMPLETA</button></div>`);
     const back = from === 'title' ? () => this.title() : () => this.resume();
+    this.bindOptions(back);
     this.on('#back', back);
     this.on('#controls', () => this.controls(back));
   }
@@ -347,6 +393,7 @@ export class Ui {
   }
 
   private death(): void {
+    this.audio.play('death');
     this.panel('<div class="eyebrow">LAS RAÍCES RECUERDAN TUS PASOS</div><h2>La llama no se apaga</h2><p>Conservás tus descubrimientos. Volvé al último santuario y observá las señales antes de atacar.</p><button class="primary" id="retry">VOLVER A INTENTAR</button>');
     this.on('#retry', () => {
       this.game.retry();
@@ -355,6 +402,7 @@ export class Ui {
   }
 
   private victory(def: BossDef): void {
+    this.audio.play('victory');
     this.panel(`<div class="eyebrow">${esc(def.victory.eyebrow)}</div><h2>${esc(def.victory.title)}</h2><div class="ornament">─ ᛟ ─</div><p>${def.victory.text}</p><button class="primary" id="explore">SEGUIR EXPLORANDO</button>`);
     this.on('#explore', () => this.resume());
   }

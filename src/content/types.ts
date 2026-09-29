@@ -94,6 +94,8 @@ export interface BossDef {
   h: number;
   hp: number;
   shards: number;
+  /** Music track per phase (the last one repeats). */
+  music?: string[];
   /** Item granted on victory (a seal). */
   reward?: string;
   phases: BossPhase[];
@@ -239,6 +241,73 @@ export interface Content {
   clues: ClueDef[];
   scripts: Record<string, string>;
   story: StoryDef;
+  sfx: Record<string, SfxDef>;
+  music: MusicDef;
+  /** Obstacle texts keyed by gateId. */
+  gates: Record<string, GateText>;
   /** Skeletal rigs keyed by boss look. */
   rigs: Record<string, RigDef>;
+}
+
+/** One synthesized layer of a sound effect: a tone or filtered noise with an envelope. */
+export interface SfxLayer {
+  wave: OscillatorType | 'noise';
+  /** Tone pitch in Hz (for noise, the default filter frequency). */
+  freq: number;
+  /** Pitch at the end of the sound, for sweeps. */
+  to?: number;
+  dur: number;
+  gain: number;
+  attack?: number;
+  delay?: number;
+  filter?: { type: BiquadFilterType; freq: number; to?: number; q?: number };
+  /** Share sent to the reverb, 0-1. */
+  reverb?: number;
+}
+
+export interface SfxDef {
+  /** Random pitch variation (±fraction) so repeated sounds don't feel robotic. */
+  vary?: number;
+  layers: SfxLayer[];
+}
+
+interface MusicVoice {
+  gain: number;
+  wave: OscillatorType;
+  /** Octaves above (or below) the track root. */
+  octave: number;
+}
+
+/** A generative track: a chord per bar, 16 steps per bar, layered voices. */
+export interface MusicTrack {
+  bpm: number;
+  /** MIDI note of the scale root. */
+  root: number;
+  scale: number[];
+  /** Scale degrees of each bar's chord (7 and up wrap to the next octave). */
+  chords: number[][];
+  layers: {
+    pad?: MusicVoice & { cutoff: number };
+    /** Pattern values: 1 root, 2 fifth, 3 octave, 0 rest. */
+    bass?: MusicVoice & { cutoff: number; pattern: number[] };
+    /** Plays the next chord tone on each 1. */
+    arp?: MusicVoice & { decay: number; echo: number; pattern: number[] };
+    /** Sparse melody wandering the scale; density is the chance per eighth note. */
+    bells?: { gain: number; octave: number; density: number; decay: number; echo: number };
+    drums?: { gain: number; kick: number[]; snare: number[]; hat: number[] };
+  };
+}
+
+export interface MusicDef {
+  title: string;
+  /** Track for each room biome. */
+  biomes: Record<string, string>;
+  tracks: Record<string, MusicTrack>;
+}
+
+/** What the player thinks about an obstacle: on hitting it, and on learning what opens it. */
+export interface GateText {
+  name: string;
+  hit: string;
+  recall?: string;
 }

@@ -123,6 +123,35 @@ export function validateWorld(c: Content): ValidationReport {
       for (const move of Object.keys(boss.moves))
         if (!rig.clips[`${move}_wind`] || !rig.clips[`${move}_strike`]) warnings.push(`Esqueleto ${boss.look}: "${move}" no tiene animaciones ${move}_wind/${move}_strike.`);
   }
+  // Audio ------------------------------------------------------------------
+  const tracks = c.music?.tracks ?? {};
+  const needTrack = (where: string, name: string) => {
+    if (!tracks[name]) errors.push(`${where}: la pista "${name}" no existe en music.json.`);
+  };
+  if (c.music) {
+    needTrack('music.json (title)', c.music.title);
+    for (const [biome, name] of Object.entries(c.music.biomes)) needTrack(`music.json (bioma ${biome})`, name);
+    for (const r of rooms) if (!c.music.biomes[r.biome]) warnings.push(`${r.id}: el bioma "${r.biome}" no tiene música asignada.`);
+    for (const [name, t] of Object.entries(tracks)) {
+      if (!t.chords.length || t.chords.some((ch) => !ch.length)) errors.push(`Pista ${name}: cada compás necesita un acorde.`);
+      for (const [layer, v] of Object.entries(t.layers))
+        for (const key of ['pattern', 'kick', 'snare', 'hat'] as const) {
+          const pattern = (v as Record<string, unknown>)[key];
+          if (Array.isArray(pattern) && pattern.length !== 16) errors.push(`Pista ${name}: ${layer}.${key} debe tener 16 pasos.`);
+        }
+    }
+  }
+  for (const [id, boss] of Object.entries(c.bosses)) for (const name of boss.music ?? []) needTrack(`Jefe ${id}`, name);
+  for (const [name, def] of Object.entries(c.sfx ?? {}))
+    if (!def.layers?.length || def.layers.some((l) => !(l.dur > 0) || !(l.gain > 0))) errors.push(`Sonido ${name}: cada capa necesita "dur" y "gain" positivos.`);
+
+  for (const id of Object.keys(c.gates ?? {})) if (!gateIds.has(id)) errors.push(`gates.json: "${id}" no corresponde a ninguna compuerta del mundo.`);
+  for (const r of rooms)
+    for (const g of entitiesOf(r, 'Gate')) {
+      const id = text(g, 'gateId');
+      if (!c.gates?.[id]) warnings.push(`${r.id}: la compuerta "${id}" no tiene textos en gates.json (el jugador no recibe pistas).`);
+      else if (text(g, 'opensWith').startsWith('spell:') && !c.gates[id].recall) warnings.push(`gates.json: "${id}" se abre con una magia pero no tiene "recall".`);
+    }
   for (const [look, rig] of Object.entries(c.rigs ?? {})) {
     const bones = new Set(rig.bones.map((b) => b.id));
     for (const bone of rig.bones) if (bone.parent && !bones.has(bone.parent)) errors.push(`Esqueleto ${look}: el hueso "${bone.id}" cuelga de "${bone.parent}", que no existe.`);

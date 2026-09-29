@@ -12,7 +12,7 @@ function projectile(game: Game, id: string, kind: 'fire' | 'frost', lv: SpellLev
     x: p.x + 9, y: p.y + 13, w: 12, h: 9, vx: p.face * (lv.speed ?? 430), life: 1.8,
     spell: id, kind, damage: lv.damage ?? 1, pierce: lv.pierce, freeze: lv.freeze, hits: new Map(),
   });
-  game.sound(kind === 'fire' ? 720 : 980, 0.15, kind === 'fire' ? 'sawtooth' : 'sine');
+  game.sound(kind === 'fire' ? 'spellFire' : 'spellFrost', p.x);
 }
 
 function vortex(game: Game, id: string, lv: SpellLevel): void {
@@ -21,7 +21,7 @@ function vortex(game: Game, id: string, lv: SpellLevel): void {
     x: centerX(p) - 18 + p.face * 22, y: p.y - 6, w: 36, h: 42, vx: p.face * (lv.speed ?? 160), life: lv.life ?? 1.6,
     spell: id, kind: 'vortex', damage: lv.damage ?? 1, pierce: true, rehit: lv.rehit ?? 0.25, hits: new Map(),
   });
-  game.sound(420, 0.3, 'sawtooth');
+  game.sound('spellVortex', p.x);
 }
 
 function shield(game: Game, lv: SpellLevel): void {
@@ -30,7 +30,7 @@ function shield(game: Game, lv: SpellLevel): void {
   p.shieldBurn = lv.burn ?? 0;
   p.reflectDamage = lv.reflectDamage ?? 1;
   game.burst(centerX(p), centerY(p), p.shieldBurn ? '#f2a35a' : '#b9d7ff', 16);
-  game.sound(880, 0.25, 'sine');
+  game.sound('spellShield', p.x);
 }
 
 /** A short cone of wind in front of the player. */
@@ -55,7 +55,7 @@ function gust(game: Game, id: string, lv: SpellLevel): void {
   game.waves = game.waves.filter((w) => !overlap(area, w));
   for (const gate of game.closedGates()) if (overlap(area, gate.rect) && game.spellOpens(gate, id)) game.openGate(gate);
   game.effects.push({ kind: lv.freeze ? 'blizzard' : 'gust', ...area, face: p.face, life: 0.3, max: 0.3 });
-  game.sound(lv.freeze ? 1100 : 300, 0.2, 'triangle');
+  game.sound(lv.freeze ? 'spellBlizzard' : 'spellWind', p.x);
 }
 
 export function castEffect(game: Game, id: string, spell: SpellDef, lv: SpellLevel): void {

@@ -887,3 +887,27 @@ button:disabled {
   background: #d9467e;
   box-shadow: 0 0 10px #d9467e;
 }
+
+#toast.thought {
+  font: italic 14px Georgia, serif;
+  color: #efe6c4;
+}
+
+/* Audio panel: volume steps. */
+.volume {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 11px;
+  color: var(--ink);
+}
+
+.volume button {
+  margin: 0;
+  padding: 5px 12px;
+}
+
+.volume .level {
+  letter-spacing: 1px;
+  color: #cfbd82;
+}

@@ -102,6 +102,13 @@ Copiá `cipher`, `ciphertext` y `solutionHash` a `data/pages.json`. El texto ori
 
 Después de cualquier cambio, `npm run check` confirma que todo sigue siendo alcanzable.
 
+## Audio
+
+Todo el audio se sintetiza en el navegador con la Web Audio API, sin archivos. El sonido arranca activado y se ajusta en **Audio** (título o pausa): silenciar, volumen de música y de efectos. Por política de los navegadores, empieza a sonar con la primera tecla o clic.
+
+- **Efectos** (`data/sfx.json`): cada uno es una lista de capas; cada capa es un tono (`sine`, `triangle`, `square`, `sawtooth`) o ruido (`noise`), con barrido de frecuencia (`freq` → `to`), duración, volumen, ataque, retardo, filtro opcional y envío a la reverberación. `vary` cambia un poco el tono en cada repetición. Suenan a izquierda o derecha según dónde ocurren en pantalla. Los nombres que usa el código están en `src/audio/names.ts`, y una prueba verifica que todos tengan receta.
+- **Música** (`data/music.json`): cada pista tiene tempo, tónica (nota MIDI), escala, un acorde por compás (en grados de la escala) y capas: `pad`, `bass` y `arp` con patrones de 16 pasos, `bells` (melodía aleatoria pero siempre igual para cada compás) y `drums`. `biomes` asigna una pista a cada bioma, y cada jefe elige la suya por fase con `"music"` en `bosses.json`. Al cambiar de pista hay un fundido.
+
 ## Guardado
 
 El guardado vive en el `localStorage` del navegador (clave `runas-rotas-save`) e incluye un número de versión. Las partidas anteriores se migran solas: conservan sus magias equipadas y reciben el sello de los jefes ya vencidos. Con almacenamiento bloqueado se puede jugar sin guardar.

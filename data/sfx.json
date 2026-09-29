@@ -1,0 +1,187 @@
+{
+  "jump": { "vary": 0.06, "layers": [
+    { "wave": "triangle", "freq": 300, "to": 520, "dur": 0.09, "gain": 0.16 },
+    { "wave": "noise", "freq": 2400, "dur": 0.05, "gain": 0.05, "filter": { "type": "highpass", "freq": 2000 } }
+  ] },
+  "doubleJump": { "vary": 0.04, "layers": [
+    { "wave": "sine", "freq": 500, "to": 900, "dur": 0.12, "gain": 0.14 },
+    { "wave": "triangle", "freq": 750, "to": 1300, "dur": 0.1, "gain": 0.07, "delay": 0.02 },
+    { "wave": "noise", "freq": 3000, "dur": 0.08, "gain": 0.05, "filter": { "type": "bandpass", "freq": 3000, "q": 1 } }
+  ] },
+  "land": { "vary": 0.1, "layers": [
+    { "wave": "noise", "freq": 400, "dur": 0.07, "gain": 0.12, "filter": { "type": "lowpass", "freq": 400 } },
+    { "wave": "sine", "freq": 120, "to": 60, "dur": 0.08, "gain": 0.14 }
+  ] },
+  "dash": { "vary": 0.05, "layers": [
+    { "wave": "noise", "freq": 1200, "dur": 0.18, "gain": 0.2, "filter": { "type": "bandpass", "freq": 1200, "to": 300, "q": 0.8 } },
+    { "wave": "sine", "freq": 200, "to": 120, "dur": 0.12, "gain": 0.08 }
+  ] },
+  "swing": { "vary": 0.12, "layers": [
+    { "wave": "noise", "freq": 2500, "dur": 0.12, "gain": 0.22, "filter": { "type": "bandpass", "freq": 2600, "to": 900, "q": 1.2 } }
+  ] },
+  "pogo": { "vary": 0.05, "layers": [
+    { "wave": "square", "freq": 500, "to": 800, "dur": 0.06, "gain": 0.06 },
+    { "wave": "noise", "freq": 4000, "dur": 0.04, "gain": 0.06, "filter": { "type": "highpass", "freq": 3500 } }
+  ] },
+  "enemyHit": { "vary": 0.1, "layers": [
+    { "wave": "noise", "freq": 1800, "dur": 0.08, "gain": 0.28, "filter": { "type": "lowpass", "freq": 1800 } },
+    { "wave": "square", "freq": 180, "to": 90, "dur": 0.07, "gain": 0.08 },
+    { "wave": "sine", "freq": 95, "to": 50, "dur": 0.1, "gain": 0.2 }
+  ] },
+  "kill": { "vary": 0.08, "layers": [
+    { "wave": "noise", "freq": 900, "dur": 0.25, "gain": 0.22, "filter": { "type": "lowpass", "freq": 900, "to": 200 } },
+    { "wave": "sawtooth", "freq": 160, "to": 40, "dur": 0.3, "gain": 0.08, "filter": { "type": "lowpass", "freq": 800 } }
+  ] },
+  "hurt": { "vary": 0.05, "layers": [
+    { "wave": "sawtooth", "freq": 220, "to": 80, "dur": 0.25, "gain": 0.16, "filter": { "type": "lowpass", "freq": 1200 } },
+    { "wave": "noise", "freq": 1500, "dur": 0.12, "gain": 0.2, "filter": { "type": "lowpass", "freq": 1500 } }
+  ] },
+  "noMana": { "layers": [{ "wave": "square", "freq": 140, "to": 120, "dur": 0.08, "gain": 0.06 }] },
+  "reflect": { "vary": 0.05, "layers": [
+    { "wave": "sine", "freq": 1200, "to": 1800, "dur": 0.08, "gain": 0.1 },
+    { "wave": "sine", "freq": 1800, "dur": 0.12, "gain": 0.05, "delay": 0.03, "reverb": 0.4 }
+  ] },
+  "guard": { "vary": 0.06, "layers": [
+    { "wave": "square", "freq": 1500, "to": 1400, "dur": 0.05, "gain": 0.06 },
+    { "wave": "sine", "freq": 2600, "dur": 0.15, "gain": 0.05, "reverb": 0.3 },
+    { "wave": "noise", "freq": 5000, "dur": 0.03, "gain": 0.06, "filter": { "type": "highpass", "freq": 5000 } }
+  ] },
+  "gateBlock": { "vary": 0.1, "layers": [
+    { "wave": "noise", "freq": 700, "dur": 0.08, "gain": 0.22, "filter": { "type": "lowpass", "freq": 700 } },
+    { "wave": "square", "freq": 180, "dur": 0.06, "gain": 0.06 }
+  ] },
+  "gateOpen": { "layers": [
+    { "wave": "noise", "freq": 800, "dur": 0.8, "gain": 0.25, "attack": 0.05, "filter": { "type": "bandpass", "freq": 900, "to": 200, "q": 0.7 } },
+    { "wave": "sawtooth", "freq": 110, "to": 55, "dur": 0.6, "gain": 0.08, "filter": { "type": "lowpass", "freq": 500 } }
+  ] },
+  "item": { "layers": [
+    { "wave": "sine", "freq": 660, "dur": 0.25, "gain": 0.1, "reverb": 0.4 },
+    { "wave": "sine", "freq": 880, "dur": 0.25, "gain": 0.1, "delay": 0.08, "reverb": 0.4 },
+    { "wave": "sine", "freq": 1320, "dur": 0.35, "gain": 0.09, "delay": 0.16, "reverb": 0.5 }
+  ] },
+  "ability": { "layers": [
+    { "wave": "triangle", "freq": 523, "dur": 0.5, "gain": 0.1, "reverb": 0.5 },
+    { "wave": "triangle", "freq": 659, "dur": 0.5, "gain": 0.1, "delay": 0.1, "reverb": 0.5 },
+    { "wave": "triangle", "freq": 784, "dur": 0.5, "gain": 0.1, "delay": 0.2, "reverb": 0.5 },
+    { "wave": "triangle", "freq": 1046, "dur": 0.9, "gain": 0.1, "delay": 0.3, "reverb": 0.6 }
+  ] },
+  "page": { "layers": [
+    { "wave": "noise", "freq": 3000, "dur": 0.18, "gain": 0.06, "filter": { "type": "bandpass", "freq": 3500, "q": 0.6 } },
+    { "wave": "sine", "freq": 392, "dur": 0.6, "gain": 0.09, "delay": 0.05, "reverb": 0.5 },
+    { "wave": "sine", "freq": 587, "dur": 0.7, "gain": 0.08, "delay": 0.17, "reverb": 0.5 }
+  ] },
+  "shrine": { "layers": [
+    { "wave": "sine", "freq": 262, "dur": 1.4, "gain": 0.07, "attack": 0.2, "reverb": 0.7 },
+    { "wave": "sine", "freq": 330, "dur": 1.4, "gain": 0.07, "attack": 0.25, "reverb": 0.7 },
+    { "wave": "sine", "freq": 392, "dur": 1.4, "gain": 0.07, "attack": 0.3, "reverb": 0.7 },
+    { "wave": "triangle", "freq": 784, "dur": 1.0, "gain": 0.03, "delay": 0.3, "reverb": 0.8 }
+  ] },
+  "solve": { "layers": [
+    { "wave": "triangle", "freq": 440, "dur": 0.5, "gain": 0.09, "reverb": 0.6 },
+    { "wave": "triangle", "freq": 554, "dur": 0.5, "gain": 0.09, "delay": 0.07, "reverb": 0.6 },
+    { "wave": "triangle", "freq": 659, "dur": 0.5, "gain": 0.09, "delay": 0.14, "reverb": 0.6 },
+    { "wave": "triangle", "freq": 880, "dur": 0.6, "gain": 0.09, "delay": 0.21, "reverb": 0.6 },
+    { "wave": "sine", "freq": 1109, "dur": 1.1, "gain": 0.08, "delay": 0.28, "reverb": 0.8 }
+  ] },
+  "upgrade": { "layers": [
+    { "wave": "sine", "freq": 700, "to": 1400, "dur": 0.25, "gain": 0.1, "reverb": 0.4 },
+    { "wave": "sine", "freq": 1400, "dur": 0.3, "gain": 0.07, "delay": 0.12, "reverb": 0.6 }
+  ] },
+  "fuse": { "layers": [
+    { "wave": "sawtooth", "freq": 220, "to": 440, "dur": 0.6, "gain": 0.09, "filter": { "type": "lowpass", "freq": 600, "to": 3000 } },
+    { "wave": "sine", "freq": 880, "dur": 0.8, "gain": 0.08, "delay": 0.45, "reverb": 0.8 }
+  ] },
+  "spellFire": { "vary": 0.06, "layers": [
+    { "wave": "noise", "freq": 1500, "dur": 0.25, "gain": 0.18, "filter": { "type": "bandpass", "freq": 1500, "to": 600, "q": 0.9 } },
+    { "wave": "sawtooth", "freq": 300, "to": 180, "dur": 0.2, "gain": 0.07, "filter": { "type": "lowpass", "freq": 1200 } }
+  ] },
+  "spellFrost": { "vary": 0.05, "layers": [
+    { "wave": "sine", "freq": 1600, "to": 2200, "dur": 0.15, "gain": 0.09 },
+    { "wave": "triangle", "freq": 2400, "dur": 0.2, "gain": 0.05, "delay": 0.03, "reverb": 0.5 },
+    { "wave": "noise", "freq": 6000, "dur": 0.1, "gain": 0.05, "filter": { "type": "highpass", "freq": 6000 } }
+  ] },
+  "spellVortex": { "layers": [
+    { "wave": "noise", "freq": 600, "dur": 0.5, "gain": 0.2, "filter": { "type": "bandpass", "freq": 600, "to": 1500, "q": 0.8 } },
+    { "wave": "sawtooth", "freq": 150, "to": 300, "dur": 0.5, "gain": 0.07, "filter": { "type": "lowpass", "freq": 900 } }
+  ] },
+  "spellShield": { "layers": [
+    { "wave": "sine", "freq": 440, "to": 880, "dur": 0.3, "gain": 0.09, "reverb": 0.5 },
+    { "wave": "sine", "freq": 660, "to": 1320, "dur": 0.3, "gain": 0.05, "reverb": 0.5 }
+  ] },
+  "spellWind": { "vary": 0.06, "layers": [
+    { "wave": "noise", "freq": 400, "dur": 0.32, "gain": 0.25, "attack": 0.03, "filter": { "type": "bandpass", "freq": 400, "to": 1800, "q": 0.7 } }
+  ] },
+  "spellBlizzard": { "layers": [
+    { "wave": "noise", "freq": 800, "dur": 0.45, "gain": 0.22, "attack": 0.03, "filter": { "type": "bandpass", "freq": 800, "to": 3000, "q": 0.7 } },
+    { "wave": "sine", "freq": 2000, "dur": 0.3, "gain": 0.04, "reverb": 0.6 }
+  ] },
+  "learn": { "layers": [
+    { "wave": "sine", "freq": 523, "dur": 1.2, "gain": 0.06, "attack": 0.15, "reverb": 0.8 },
+    { "wave": "sine", "freq": 784, "dur": 1.2, "gain": 0.06, "attack": 0.2, "delay": 0.1, "reverb": 0.8 },
+    { "wave": "sine", "freq": 1046, "dur": 1.4, "gain": 0.05, "attack": 0.25, "delay": 0.2, "reverb": 0.9 }
+  ] },
+  "bowShot": { "vary": 0.08, "layers": [
+    { "wave": "triangle", "freq": 300, "to": 200, "dur": 0.07, "gain": 0.1 },
+    { "wave": "noise", "freq": 3000, "dur": 0.05, "gain": 0.07, "filter": { "type": "highpass", "freq": 3000 } }
+  ] },
+  "batSwoop": { "vary": 0.1, "layers": [
+    { "wave": "noise", "freq": 2000, "dur": 0.25, "gain": 0.09, "filter": { "type": "bandpass", "freq": 2000, "to": 800, "q": 1 } },
+    { "wave": "square", "freq": 900, "to": 1400, "dur": 0.08, "gain": 0.03 }
+  ] },
+  "bossWind": { "vary": 0.05, "layers": [
+    { "wave": "sawtooth", "freq": 70, "to": 100, "dur": 0.5, "gain": 0.1, "attack": 0.25, "filter": { "type": "lowpass", "freq": 400 } }
+  ] },
+  "bossStrike": { "vary": 0.06, "layers": [
+    { "wave": "noise", "freq": 1200, "dur": 0.2, "gain": 0.26, "filter": { "type": "lowpass", "freq": 1200 } },
+    { "wave": "sine", "freq": 80, "to": 40, "dur": 0.25, "gain": 0.25 }
+  ] },
+  "slam": { "layers": [
+    { "wave": "sine", "freq": 60, "to": 30, "dur": 0.55, "gain": 0.45 },
+    { "wave": "noise", "freq": 500, "dur": 0.45, "gain": 0.3, "filter": { "type": "lowpass", "freq": 500, "to": 120 } }
+  ] },
+  "roar": { "layers": [
+    { "wave": "sawtooth", "freq": 90, "to": 60, "dur": 1.3, "gain": 0.16, "attack": 0.2, "filter": { "type": "lowpass", "freq": 700 } },
+    { "wave": "sawtooth", "freq": 93, "to": 62, "dur": 1.3, "gain": 0.12, "attack": 0.2, "filter": { "type": "lowpass", "freq": 600 } },
+    { "wave": "noise", "freq": 800, "dur": 1.1, "gain": 0.14, "attack": 0.3, "filter": { "type": "lowpass", "freq": 800 } }
+  ] },
+  "summon": { "layers": [
+    { "wave": "sawtooth", "freq": 110, "dur": 0.9, "gain": 0.12, "attack": 0.2, "filter": { "type": "lowpass", "freq": 900 }, "reverb": 0.4 },
+    { "wave": "sawtooth", "freq": 165, "dur": 0.9, "gain": 0.1, "attack": 0.25, "filter": { "type": "lowpass", "freq": 900 }, "reverb": 0.4 }
+  ] },
+  "crystalRain": { "layers": [
+    { "wave": "noise", "freq": 4000, "dur": 0.6, "gain": 0.07, "filter": { "type": "highpass", "freq": 4000 } },
+    { "wave": "sine", "freq": 2500, "to": 3000, "dur": 0.3, "gain": 0.04, "delay": 0.1, "reverb": 0.6 }
+  ] },
+  "eruption": { "layers": [
+    { "wave": "noise", "freq": 900, "dur": 0.3, "gain": 0.22, "filter": { "type": "lowpass", "freq": 900 } },
+    { "wave": "sine", "freq": 100, "to": 50, "dur": 0.3, "gain": 0.2 }
+  ] },
+  "pillar": { "vary": 0.15, "layers": [
+    { "wave": "triangle", "freq": 1400, "to": 2200, "dur": 0.12, "gain": 0.04 },
+    { "wave": "noise", "freq": 2500, "dur": 0.08, "gain": 0.06, "filter": { "type": "highpass", "freq": 2500 } }
+  ] },
+  "beamCharge": { "layers": [
+    { "wave": "sine", "freq": 300, "to": 1200, "dur": 0.9, "gain": 0.06, "attack": 0.4 },
+    { "wave": "sawtooth", "freq": 150, "to": 600, "dur": 0.9, "gain": 0.03, "attack": 0.4, "filter": { "type": "lowpass", "freq": 1200 } }
+  ] },
+  "beam": { "layers": [
+    { "wave": "sawtooth", "freq": 220, "dur": 0.6, "gain": 0.08, "filter": { "type": "lowpass", "freq": 2500 } },
+    { "wave": "sine", "freq": 880, "dur": 0.6, "gain": 0.05 },
+    { "wave": "noise", "freq": 5000, "dur": 0.6, "gain": 0.05, "filter": { "type": "highpass", "freq": 4000 } }
+  ] },
+  "victory": { "layers": [
+    { "wave": "triangle", "freq": 392, "dur": 0.3, "gain": 0.1, "reverb": 0.5 },
+    { "wave": "triangle", "freq": 523, "dur": 0.3, "gain": 0.1, "delay": 0.18, "reverb": 0.5 },
+    { "wave": "triangle", "freq": 659, "dur": 0.3, "gain": 0.1, "delay": 0.36, "reverb": 0.5 },
+    { "wave": "triangle", "freq": 784, "dur": 1.6, "gain": 0.1, "delay": 0.54, "reverb": 0.8 },
+    { "wave": "sine", "freq": 523, "dur": 1.6, "gain": 0.07, "delay": 0.54, "reverb": 0.8 },
+    { "wave": "sine", "freq": 659, "dur": 1.6, "gain": 0.06, "delay": 0.54, "reverb": 0.8 }
+  ] },
+  "death": { "layers": [
+    { "wave": "triangle", "freq": 392, "dur": 0.5, "gain": 0.09, "reverb": 0.6 },
+    { "wave": "triangle", "freq": 349, "dur": 0.5, "gain": 0.09, "delay": 0.35, "reverb": 0.6 },
+    { "wave": "triangle", "freq": 311, "dur": 0.6, "gain": 0.09, "delay": 0.7, "reverb": 0.7 },
+    { "wave": "sine", "freq": 262, "dur": 2.0, "gain": 0.08, "delay": 1.05, "reverb": 0.9 }
+  ] },
+  "menu": { "layers": [{ "wave": "triangle", "freq": 880, "dur": 0.05, "gain": 0.05 }] }
+}

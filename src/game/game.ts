@@ -1,5 +1,6 @@
 import { PHYS, PLAYER, VIEW_H, VIEW_W } from '../config.ts';
 import type { BossDef, BossSummon, Content, PageDef } from '../content/types.ts';
+import type { SfxName } from '../audio/names.ts';
 import { Emitter } from '../core/events.ts';
 import { centerX, centerY, clamp, overlap, type Rect } from '../core/math.ts';
 import type { SaveContext, SaveStore } from '../core/save.ts';
@@ -65,7 +66,8 @@ export interface Gate {
 export interface GameEvents {
   /** Notification text; `{action}` placeholders are resolved by the UI. */
   toast: string;
-  sound: { freq: number; duration: number; type?: OscillatorType };
+  /** A sound effect; x (world) places it left or right. */
+  sound: { name: SfxName; x?: number };
   room: RoomData;
   dead: undefined;
   victory: BossDef;
@@ -150,7 +152,7 @@ export class Game {
       },
       hurtPlayer: (x) => this.hurtPlayer(x),
       fireArrow: (a) => this.arrows.push(a),
-      sound: (freq, duration, type) => this.sound(freq, duration, type),
+      sound: (name, x) => this.sound(name, x),
       spawnWave: (w) => this.waves.push(w),
       addHazard: (h) => this.hazards.push(h),
       summon: (list) => this.summon(list),
@@ -211,8 +213,8 @@ export class Game {
     this.events.emit('toast', text);
   }
 
-  sound(freq: number, duration = 0.1, type?: OscillatorType): void {
-    this.events.emit('sound', { freq, duration, type });
+  sound(name: SfxName, x?: number): void {
+    this.events.emit('sound', { name, x });
   }
 
   // ------------------------------------------------------------ rooms
@@ -282,7 +284,7 @@ export class Game {
   openGate(gate: Gate): void {
     this.progress.flags.add(`gate:${gate.id}`);
     this.burst(centerX(gate.rect), gate.rect.y + gate.rect.h - 45, '#e9a44c', 35);
-    this.sound(300, 0.4, 'sawtooth');
+    this.sound('gateOpen', centerX(gate.rect));
     this.save();
     this.spawnBosses();
   }
@@ -329,13 +331,15 @@ export class Game {
     const gates = this.closedGates();
     const solids = gates.map((g) => g.rect);
 
+    const falling = !p.ground && p.vy > 320;
     const ev = updatePlayer(p, intent, this.progress.abilities, room, dt, solids);
-    if (ev.jumped || ev.wallJumped) this.sound(420, 0.08);
-    if (ev.doubleJumped) this.sound(540, 0.1);
-    if (ev.dashed) this.sound(500, 0.1);
+    if (falling && p.ground) this.sound('land', p.x);
+    if (ev.jumped || ev.wallJumped) this.sound('jump', p.x);
+    if (ev.doubleJumped) this.sound('doubleJump', p.x);
+    if (ev.dashed) this.sound('dash', p.x);
     if (ev.attacked) {
       this.serial++;
-      this.sound(380, 0.08);
+      this.sound('swing', p.x);
     }
     if (p.dash > 0) this.burst(p.x + 9, p.y + 18, '#82b6a2', 1);
     if (ev.doubleJumped) this.burst(p.x + 9, p.y + p.h, '#d9dcc0', 8);
@@ -351,6 +355,7 @@ export class Game {
     const sword = p.attack > 0 ? swordBox(p) : null;
     this.updateEnemies(dt, sword, solids);
     if (sword && p.attackDown && this.pogoSerial !== this.serial && touchesTile(room, sword, Tile.Spikes, 0)) this.bounce();
+    if (sword) this.swordOnGates(sword, gates);
     this.updateShots(dt, gates);
     this.updateArrows(dt, solids);
     this.updateWaves(dt);
@@ -373,7 +378,7 @@ export class Game {
   private bounce(): void {
     this.pogoSerial = this.serial;
     pogo(this.player, this.progress.abilities.has('double_jump') ? 1 : 0);
-    this.sound(620, 0.06);
+    this.sound('pogo', this.player.x);
   }
 
   private updateEnemies(dt: number, sword: Rect | null, solids: Rect[]): void {
@@ -441,7 +446,7 @@ export class Game {
     const spell = id && this.content.spells[id];
     if (!spell || p.magicCool > 0) return;
     if (p.mana < spell.cost) {
-      this.sound(140, 0.08, 'square');
+      this.sound('noMana');
       return;
     }
     p.mana -= spell.cost;
@@ -465,6 +470,7 @@ export class Game {
       for (const gate of gates) {
         if (s.life <= 0 || !overlap(s, gate.rect)) continue;
         if (this.spellOpens(gate, s.spell)) this.openGate(gate);
+        else this.gateResists(gate, s);
         s.life = 0;
       }
       // A vortex rolls along the floor: only its core collides with walls.
@@ -515,7 +521,7 @@ export class Game {
         if (p.shield > 0 && (a.shard || a.spin)) a.life = 0;
         else if (p.shield > 0) {
           Object.assign(a, { vx: -a.vx, vy: -a.vy, friendly: true, life: 3, damage: p.reflectDamage });
-          this.sound(900, 0.06, 'sine');
+          this.sound('reflect', a.x);
         } else if (p.dash <= 0) {
           this.hurtPlayer(a.x);
           a.life = 0;
@@ -532,7 +538,10 @@ export class Game {
     for (const h of this.hazards) {
       if (h.delay > 0) {
         h.delay -= dt;
-        if (h.delay <= 0 && h.kind === 'pillar') this.burst(h.x + h.w / 2, h.y + h.h, '#8fd0e0', 6);
+        if (h.delay <= 0 && h.kind === 'pillar') {
+          this.burst(h.x + h.w / 2, h.y + h.h, '#8fd0e0', 6);
+          this.sound('pillar', h.x);
+        }
         continue;
       }
       h.life -= dt;
@@ -582,7 +591,7 @@ export class Game {
     p.vy = -220;
     this.shake = 0.2;
     this.burst(p.x + 9, p.y + 12, '#dc8b75');
-    this.sound(110, 0.18, 'sawtooth');
+    this.sound('hurt', p.x);
     if (p.hp <= 0) {
       this.mode = 'dead';
       this.events.emit('dead', undefined);
@@ -605,13 +614,13 @@ export class Game {
     if (e.boss?.guard) {
       // Roaring into a new phase: blows glance off.
       this.burst(centerX(e), centerY(e), '#eaf8ff', 6);
-      this.sound(900, 0.05, 'square');
+      this.sound('guard', centerX(e));
       return;
     }
     e.hp -= amount;
     e.hit = 0.16;
     this.burst(centerX(e), centerY(e), '#a52d35');
-    this.sound(220, 0.07, 'square');
+    this.sound(e.hp <= 0 ? 'kill' : 'enemyHit', centerX(e));
     if (e.hp <= 0) this.killEnemy(e);
   }
 
@@ -694,19 +703,19 @@ export class Game {
       pr.items.add(id);
       this.save();
       this.toast(this.content.items[id]?.pickup ?? id);
-      this.sound(580, 0.2);
+      this.sound('item');
     } else if (e.type === 'Ability') {
       const id = fieldText(e, 'ability');
       pr.abilities.add(id);
       this.save();
       this.toast(this.content.abilities[id]?.pickup ?? id);
-      this.sound(650, 0.3);
+      this.sound('ability');
     } else if (e.type === 'Page') {
       const id = fieldText(e, 'page');
       if (!pr.pages.has(id)) {
         pr.pages.set(id, { solved: false });
         this.save();
-        this.sound(520, 0.25);
+        this.sound('page');
         this.toast(pr.items.has('grimoire') ? 'PÁGINA ENCONTRADA · Se incorporó al grimorio.' : 'PÁGINA ENCONTRADA · Su escritura es extraña. Quizá un libro antiguo ayude a comprenderla.');
       }
       if (pr.items.has('grimoire') && !pr.pages.get(id)?.solved) this.events.emit('openPage', id);
@@ -730,7 +739,7 @@ export class Game {
     this.enterRoom(this.room.id, p.x, p.y);
     p.inv = PLAYER.invuln;
     this.save();
-    this.sound(600, 0.3);
+    this.sound('shrine');
     this.mode = 'shrine';
     this.events.emit('shrine', undefined);
   }
@@ -744,6 +753,51 @@ export class Game {
     const slot = loadout.learn(this.content, this.progress, id);
     this.save();
     this.toast(`${spell.unlock} · ${slot >= 0 ? `{spell${slot + 1}} para lanzarla.` : 'Equipala descansando en un santuario.'}`);
+    // Connect the new spell with obstacles already seen that it can open.
+    for (const gate of this.gatesOpenedBy(id)) {
+      const recall = this.content.gates[gate.id]?.recall;
+      if (recall) this.toast(recall);
+    }
+  }
+
+  /** Still-closed gates this spell opens, in rooms the player has visited. */
+  gatesOpenedBy(spellId: string): Gate[] {
+    return this.content.world.rooms
+      .filter((r) => this.progress.visited.has(r.id))
+      .flatMap((r) => entitiesOf(r, 'Gate'))
+      .map((g) => ({ id: fieldText(g, 'gateId'), opensWith: fieldText(g, 'opensWith'), rect: { x: g.x, y: g.y, w: g.w, h: g.h } }))
+      .filter((g) => g.opensWith === `spell:${spellId}` && !this.progress.flags.has(`gate:${g.id}`));
+  }
+
+  // ------------------------------------------------------------ obstacles
+
+  private gateSerial = -1;
+
+  /** Sword blows glance off gates; a downward strike bounces off them. */
+  private swordOnGates(sword: Rect, gates: Gate[]): void {
+    if (this.gateSerial === this.serial) return;
+    const gate = gates.find((g) => overlap(sword, g.rect));
+    if (!gate) return;
+    this.gateSerial = this.serial;
+    if (this.player.attackDown && this.pogoSerial !== this.serial) this.bounce();
+    this.gateResists(gate, sword);
+  }
+
+  /**
+   * Something that doesn't open a gate hit it: sparks, a dull sound and,
+   * the first time, the player's thought hinting at what might work.
+   */
+  gateResists(gate: Gate, by: Rect): void {
+    const x = clamp(centerX(by), gate.rect.x, gate.rect.x + gate.rect.w);
+    const y = clamp(centerY(by), gate.rect.y, gate.rect.y + gate.rect.h);
+    this.burst(x, y, '#f2e3a6', 6);
+    this.sound('gateBlock', x);
+    const noted = `noted:${gate.id}`;
+    const hit = this.content.gates[gate.id]?.hit;
+    if (!hit || this.progress.flags.has(noted)) return;
+    this.progress.flags.add(noted);
+    this.save();
+    this.toast(hit);
   }
 
   /** Loadout changes only happen while resting at a shrine. */
@@ -762,7 +816,7 @@ export class Game {
   upgradeSpell(id: string): boolean {
     if (!this.preparing() || !loadout.upgrade(this.content, this.progress, id)) return false;
     this.save();
-    this.sound(700, 0.3, 'sine');
+    this.sound('upgrade');
     return true;
   }
 
@@ -770,7 +824,7 @@ export class Game {
     if (!this.preparing() || !loadout.fuse(this.content, this.progress, id)) return false;
     loadout.equip(this.content, this.progress, id);
     this.save();
-    this.sound(520, 0.5, 'sawtooth');
+    this.sound('fuse');
     return true;
   }
 
@@ -793,7 +847,7 @@ export class Game {
     this.progress.pages.set(id, { solved: true, key });
     this.player.mana = PLAYER.maxMana;
     this.learnSpell(page.spell);
-    this.sound(780, 0.4);
+    this.sound('solve');
     return true;
   }
 
