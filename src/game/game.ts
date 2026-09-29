@@ -1,24 +1,41 @@
 import { PHYS, PLAYER, VIEW_H, VIEW_W } from '../config.ts';
-import type { BossDef, Content, PageDef, SpellDef } from '../content/types.ts';
+import type { BossDef, Content, PageDef } from '../content/types.ts';
 import { Emitter } from '../core/events.ts';
 import { centerX, centerY, clamp, overlap, type Rect } from '../core/math.ts';
 import type { SaveContext, SaveStore } from '../core/save.ts';
 import { createBoss, updateBoss, type BossContext, type Wave } from '../entities/boss.ts';
-import { createEnemy, guardLedge, updateArcher, updateMelee, type Arrow, type Enemy } from '../entities/enemies.ts';
+import { createEnemy, guardLedge, updateArcher, updateFlyer, updateMelee, type Arrow, type Enemy } from '../entities/enemies.ts';
 import { createPlayer, pogo, swordBox, updatePlayer, type Intent, type Player } from '../entities/player.ts';
 import { decode, type CipherKey } from '../magic/ciphers.ts';
+import { castEffect } from '../magic/effects.ts';
 import { solutionHash } from '../magic/hash.ts';
+import * as loadout from '../magic/loadout.ts';
 import { hitsSolid, moveBody, surfaceBelow, touchesTile } from '../world/collision.ts';
 import { entitiesOf, roomAt, Tile, type EntitySpawn, type RoomData } from '../world/ldtk.ts';
 import { hasToken, newProgress, type Checkpoint, type Progress } from './progress.ts';
 
-export type Mode = 'title' | 'play' | 'pause' | 'journal' | 'cipher' | 'map' | 'reading' | 'dead' | 'win';
+export type Mode = 'title' | 'prologue' | 'play' | 'pause' | 'journal' | 'cipher' | 'map' | 'reading' | 'shrine' | 'dead' | 'win';
 
 export interface Shot extends Rect {
   vx: number;
   life: number;
   spell: string;
+  kind: 'fire' | 'frost' | 'vortex';
   damage: number;
+  pierce?: boolean;
+  freeze?: number;
+  /** Seconds between hits on the same enemy; absent means once. */
+  rehit?: number;
+  /** Enemy → time when it can be hit again by this shot. */
+  hits: Map<Enemy, number>;
+}
+
+/** Short-lived visual of an area spell. */
+export interface Effect extends Rect {
+  kind: 'gust' | 'blizzard';
+  face: number;
+  life: number;
+  max: number;
 }
 
 export interface Particle {
@@ -54,6 +71,8 @@ export interface GameEvents {
   victory: BossDef;
   openPage: string;
   readClue: string;
+  /** The player rested; the UI opens the spell preparation screen. */
+  shrine: undefined;
 }
 
 /** Entities the player can use with the interact key. */
@@ -99,6 +118,7 @@ export class Game {
   arrows: Arrow[] = [];
   waves: Wave[] = [];
   particles: Particle[] = [];
+  effects: Effect[] = [];
   corpses: Corpse[] = [];
   blood = new Map<string, Stain[]>();
   camera = { x: 0, y: 0 };
@@ -202,11 +222,16 @@ export class Game {
     const p = this.player;
     Object.assign(p, { x, y, dash: 0, ground: false, coyote: 0, safe: { x, y } });
     if (!opts.keepVelocity) Object.assign(p, { vx: 0, vy: 0 });
-    if (opts.boost) p.vy = Math.min(p.vy, -PHYS.upBoost);
+    if (opts.boost) {
+      p.vy = Math.min(p.vy, -PHYS.upBoost);
+      // The boost is not a jump: releasing the button must not cut it.
+      p.jumping = false;
+    }
     this.shots = [];
     this.arrows = [];
     this.waves = [];
     this.particles = [];
+    this.effects = [];
     this.corpses = [];
     this.enemies = [];
     for (const spawn of entitiesOf(room, 'Enemy')) {
@@ -235,13 +260,23 @@ export class Game {
     }
   }
 
+  /**
+   * Gates opened by a spell stay open once hit; gates tied to any other
+   * token (a defeated boss, a flag) open by themselves while it is held.
+   */
   closedGates(): Gate[] {
     return entitiesOf(this.room, 'Gate')
       .map((g) => ({ id: fieldText(g, 'gateId'), opensWith: fieldText(g, 'opensWith'), rect: { x: g.x, y: g.y, w: g.w, h: g.h } }))
-      .filter((g) => !this.progress.flags.has(`gate:${g.id}`));
+      .filter((g) => !this.progress.flags.has(`gate:${g.id}`) && (g.opensWith.startsWith('spell:') || !this.has(g.opensWith)));
   }
 
-  private openGate(gate: Gate): void {
+  /** Whether casting `spellId` opens a gate; fusions count as their sources. */
+  spellOpens(gate: Gate, spellId: string): boolean {
+    const wanted = gate.opensWith.startsWith('spell:') ? gate.opensWith.slice(6) : '';
+    return !!wanted && (spellId === wanted || !!this.content.spells[spellId]?.fusion?.includes(wanted));
+  }
+
+  openGate(gate: Gate): void {
     this.progress.flags.add(`gate:${gate.id}`);
     this.burst(centerX(gate.rect), gate.rect.y + gate.rect.h - 45, '#e9a44c', 35);
     this.sound(300, 0.4, 'sawtooth');
@@ -316,6 +351,9 @@ export class Game {
     this.updateShots(dt, gates);
     this.updateArrows(dt, solids);
     this.updateWaves(dt);
+    this.burnAround();
+    for (const fx of this.effects) fx.life -= dt;
+    this.effects = this.effects.filter((fx) => fx.life > 0);
     for (const c of this.corpses) c.life -= dt;
     this.corpses = this.corpses.filter((c) => c.life > 0);
     for (const a of this.particles) {
@@ -341,15 +379,29 @@ export class Game {
     for (const e of [...this.enemies]) {
       if (e.hp <= 0) continue;
       e.hit = Math.max(0, e.hit - dt);
-      e.timer -= dt;
-      e.face = centerX(p) < centerX(e) ? -1 : 1;
-      e.vx = 0;
-      if (e.boss) updateBoss(e, this.ctx);
-      else if (e.def?.ai === 'archer') updateArcher(e, e.def, this.ctx);
-      else if (e.def?.ai === 'melee') updateMelee(e, e.def, this.ctx);
-      if (this.mode !== 'play') return;
-      guardLedge(e, room, dt);
-      e.vy = Math.min(PHYS.maxFall, e.vy + PHYS.gravity * dt);
+      e.burnCd = Math.max(0, e.burnCd - dt);
+      const flying = e.def?.ai === 'flyer';
+      if (e.frozen > 0) {
+        // Frozen: everything stops, including the attack timers.
+        e.frozen = Math.max(0, e.frozen - dt);
+        e.vx = 0;
+        if (flying) e.vy = 0;
+      } else if (e.knock > 0) {
+        e.knock = Math.max(0, e.knock - dt);
+        e.vx = e.knockVx;
+        if (flying) e.vy = 0;
+      } else {
+        e.timer -= dt;
+        e.face = centerX(p) < centerX(e) ? -1 : 1;
+        e.vx = 0;
+        if (e.boss) updateBoss(e, this.ctx);
+        else if (e.def?.ai === 'archer') updateArcher(e, e.def, this.ctx);
+        else if (e.def?.ai === 'melee') updateMelee(e, e.def, this.ctx);
+        else if (e.def?.ai === 'flyer') updateFlyer(e, e.def, this.ctx, this.time);
+        if (this.mode !== 'play') return;
+        guardLedge(e, room, dt, solids);
+      }
+      if (!flying) e.vy = Math.min(PHYS.maxFall, e.vy + PHYS.gravity * dt);
       moveBody(room, e, dt, solids);
       e.x = clamp(e.x, 0, room.w - e.w);
       if (e.y > room.h + 40) {
@@ -378,47 +430,63 @@ export class Game {
     }
   }
 
-  private cast(slot: 1 | 2): void {
+  /** Casts whatever is equipped in slot 1..n; empty slots do nothing. */
+  private cast(slot: number): void {
     const p = this.player;
-    const entry = Object.entries(this.content.spells).find(([id, s]) => s.slot === slot && this.progress.spells.has(id));
-    if (!entry || p.magicCool > 0) return;
-    const [id, spell] = entry;
-    if (p.mana < spell.cost) return;
+    const id = loadout.spellInSlot(this.progress, slot - 1);
+    const spell = id && this.content.spells[id];
+    if (!spell || p.magicCool > 0) return;
+    if (p.mana < spell.cost) {
+      this.sound(140, 0.08, 'square');
+      return;
+    }
     p.mana -= spell.cost;
     p.magicCool = PLAYER.magicCool;
-    this.applySpell(id, spell);
+    castEffect(this, id, spell, loadout.levelData(this.content, this.progress, id));
   }
 
-  private applySpell(id: string, spell: SpellDef): void {
-    const p = this.player;
-    if (spell.effect === 'projectile') {
-      this.shots.push({ x: p.x + 9, y: p.y + 13, w: 12, h: 9, vx: p.face * (spell.speed ?? 430), life: 1.8, spell: id, damage: spell.damage ?? 1 });
-      this.sound(720, 0.15, 'sawtooth');
-    } else if (spell.effect === 'shield') {
-      p.shield = spell.duration ?? 0.7;
-      this.burst(centerX(p), centerY(p), '#b9d7ff', 16);
-      this.sound(880, 0.25, 'sine');
-    }
+  /** Frost holds bosses for a shorter time. */
+  freeze(e: Enemy, seconds: number): void {
+    e.frozen = Math.max(e.frozen, e.boss ? seconds * 0.4 : seconds);
+    this.burst(centerX(e), centerY(e), '#bfe6ff', 10);
   }
+
+  private static readonly SHOT_COLORS: Record<Shot['kind'], string> = { fire: '#e6af64', frost: '#bfe6ff', vortex: '#f08a3c' };
 
   private updateShots(dt: number, gates: Gate[]): void {
     for (const s of this.shots) {
       s.x += s.vx * dt;
       s.life -= dt;
-      this.burst(s.x, s.y, '#e6af64', 1);
+      this.burst(s.x + s.w / 2, s.y + s.h / 2, Game.SHOT_COLORS[s.kind], s.kind === 'vortex' ? 3 : 1);
       for (const gate of gates) {
         if (s.life <= 0 || !overlap(s, gate.rect)) continue;
-        if (gate.opensWith === `spell:${s.spell}`) this.openGate(gate);
+        if (this.spellOpens(gate, s.spell)) this.openGate(gate);
         s.life = 0;
       }
-      if (hitsSolid(this.room, s)) s.life = 0;
-      for (const e of this.enemies)
-        if (s.life > 0 && e.hp > 0 && overlap(s, e)) {
-          this.hitEnemy(e, s.damage);
-          s.life = 0;
-        }
+      // A vortex rolls along the floor: only its core collides with walls.
+      const core = s.kind === 'vortex' ? { x: s.x + 8, y: s.y + 8, w: s.w - 16, h: s.h - 16 } : s;
+      if (hitsSolid(this.room, core)) s.life = 0;
+      for (const e of [...this.enemies]) {
+        if (s.life <= 0 || e.hp <= 0 || !overlap(s, e) || (s.hits.get(e) ?? -1) > this.time) continue;
+        s.hits.set(e, s.rehit ? this.time + s.rehit : Infinity);
+        if (s.freeze) this.freeze(e, s.freeze);
+        this.hitEnemy(e, s.damage);
+        if (!s.pierce) s.life = 0;
+      }
     }
     this.shots = this.shots.filter((s) => s.life > 0);
+  }
+
+  /** A fiery shield burns enemies that touch it. */
+  private burnAround(): void {
+    const p = this.player;
+    if (p.shield <= 0 || !p.shieldBurn) return;
+    const ring = { x: centerX(p) - 42, y: centerY(p) - 42, w: 84, h: 84 };
+    for (const e of [...this.enemies]) {
+      if (e.hp <= 0 || e.burnCd > 0 || !overlap(ring, e)) continue;
+      e.burnCd = 0.35;
+      this.hitEnemy(e, p.shieldBurn);
+    }
   }
 
   private updateArrows(dt: number, solids: Rect[]): void {
@@ -435,12 +503,13 @@ export class Game {
       if (a.friendly) {
         const target = this.enemies.find((e) => e.hp > 0 && overlap(a, e));
         if (target) {
-          this.hitEnemy(target, 1);
+          this.hitEnemy(target, a.damage ?? 1);
           a.life = 0;
         }
       } else if (overlap(p, a)) {
-        if (p.shield > 0) {
-          Object.assign(a, { vx: -a.vx, vy: -a.vy, friendly: true, life: 3 });
+        if (p.shield > 0 && a.shard) a.life = 0;
+        else if (p.shield > 0) {
+          Object.assign(a, { vx: -a.vx, vy: -a.vy, friendly: true, life: 3, damage: p.reflectDamage });
           this.sound(900, 0.06, 'sine');
         } else if (p.dash <= 0) {
           this.hurtPlayer(a.x);
@@ -524,16 +593,23 @@ export class Game {
     if (e.id) this.progress.defeated.add(e.id);
     this.burst(centerX(e), centerY(e), '#bc303c', e.boss ? 65 : 32);
     this.burst(centerX(e), centerY(e), '#681b29', 18);
-    this.corpses.push({ enemy: { ...e, state: 'idle', hit: 0 }, life: 0.65 });
+    this.corpses.push({ enemy: { ...e, state: 'idle', hit: 0, frozen: 0 }, life: 0.65 });
     this.stain(e);
+    const shards = e.boss ? e.boss.def.shards : (e.def?.shards ?? 0);
+    if (shards) {
+      this.progress.shards += shards;
+      this.burst(centerX(e), centerY(e), '#9fe3ff', Math.min(24, shards * 3));
+    }
     if (e.boss) {
-      this.progress.flags.add(`boss:${e.boss.id}`);
+      const { def, id } = e.boss;
+      this.progress.flags.add(`boss:${id}`);
+      if (def.reward) this.progress.items.add(def.reward);
       this.enemies = this.enemies.filter((x) => !x.summoned);
       this.arrows = [];
       this.waves = [];
       this.save();
       this.mode = 'win';
-      this.events.emit('victory', e.boss.def);
+      this.events.emit('victory', def);
       return;
     }
     this.save();
@@ -627,8 +703,48 @@ export class Game {
     this.enterRoom(this.room.id, p.x, p.y);
     p.inv = PLAYER.invuln;
     this.save();
-    this.toast('Santuario encendido · Progreso guardado · Salud y magia restauradas');
     this.sound(600, 0.3);
+    this.mode = 'shrine';
+    this.events.emit('shrine', undefined);
+  }
+
+  // ------------------------------------------------------------ spells
+
+  /** Learns a spell, equipping it when a slot is free, and announces it. */
+  learnSpell(id: string): void {
+    const spell = this.content.spells[id];
+    if (!spell) return;
+    const slot = loadout.learn(this.content, this.progress, id);
+    this.save();
+    this.toast(`${spell.unlock} · ${slot >= 0 ? `{spell${slot + 1}} para lanzarla.` : 'Equipala descansando en un santuario.'}`);
+  }
+
+  /** Loadout changes only happen while resting at a shrine. */
+  private preparing(): boolean {
+    return this.mode === 'shrine';
+  }
+
+  equipSpell(id: string): boolean {
+    return this.preparing() && loadout.equip(this.content, this.progress, id) && (this.save(), true);
+  }
+
+  unequipSpell(id: string): boolean {
+    return this.preparing() && loadout.unequip(this.progress, id) && (this.save(), true);
+  }
+
+  upgradeSpell(id: string): boolean {
+    if (!this.preparing() || !loadout.upgrade(this.content, this.progress, id)) return false;
+    this.save();
+    this.sound(700, 0.3, 'sine');
+    return true;
+  }
+
+  fuseSpells(id: string): boolean {
+    if (!this.preparing() || !loadout.fuse(this.content, this.progress, id)) return false;
+    loadout.equip(this.content, this.progress, id);
+    this.save();
+    this.sound(520, 0.5, 'sawtooth');
+    return true;
   }
 
   // ------------------------------------------------------------ grimoire
@@ -648,10 +764,8 @@ export class Game {
     if (!page || !this.progress.pages.has(id)) return false;
     if (solutionHash(page.id, this.readPage(page, key)) !== page.solutionHash) return false;
     this.progress.pages.set(id, { solved: true, key });
-    this.progress.spells.add(page.spell);
     this.player.mana = PLAYER.maxMana;
-    this.save();
-    this.toast(this.content.spells[page.spell]?.unlock ?? page.spell);
+    this.learnSpell(page.spell);
     this.sound(780, 0.4);
     return true;
   }
@@ -661,7 +775,7 @@ export class Game {
     const glyphs = [...(this.content.scripts[script] ?? '')];
     const known: Record<string, string> = {};
     for (const clue of this.content.clues) {
-      if (clue.script !== script || !this.progress.clues.has(clue.id)) continue;
+      if (!clue.script || clue.script !== script || !this.progress.clues.has(clue.id)) continue;
       for (const c of clue.word) {
         const i = c.charCodeAt(0) - 65;
         if (i >= 0 && i < 26) known[glyphs[i]] = c;

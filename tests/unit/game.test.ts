@@ -259,7 +259,7 @@ describe('progression', () => {
 
   it('thorns block the way until Ascua burns them, which wakes the boss', () => {
     const { game } = playing();
-    game.progress.spells.add('ascua');
+    game.learnSpell('ascua');
     stand(game, 'Trono', 40);
     run(game, 60, { moveX: 1 });
     expect(game.player.x + game.player.w).toBeLessThanOrEqual(120);
@@ -273,10 +273,10 @@ describe('progression', () => {
 
   it('Égida blocks shockwaves', () => {
     const { game } = playing();
-    game.progress.spells.add('egida');
+    game.learnSpell('egida');
     stand(game, 'Umbral', 99);
     game.enemies = [];
-    game.tick(STEP, { ...idleIntent(), castSlot: 2 });
+    game.tick(STEP, { ...idleIntent(), castSlot: 1 });
     expect(game.player.shield).toBeGreaterThan(0);
     expect(game.player.mana).toBe(2);
     game.waves = [{ x: game.player.x, y: game.player.y + 10, w: 24, h: 22, vx: 0, life: 3 }];

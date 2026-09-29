@@ -65,6 +65,9 @@ export function runesEncode(text: string, script: string): string {
   return [...text].map((c) => (isLetter(c) ? glyphs[c.charCodeAt(0) - 65] : c)).join('');
 }
 
+/** How a clue word looks carved in the world: in runes, or plain for inscriptions. */
+export const carved = (word: string, glyphs: string | undefined): string => (glyphs ? runesEncode(word, glyphs) : normalize(word));
+
 /** Replaces each glyph with the letter the player assigned, or UNKNOWN. */
 export function runesDecode(text: string, script: string, map: Record<string, string>): string {
   const glyphs = new Set(script);

@@ -6,6 +6,7 @@ import items from '../../data/items.json';
 import pages from '../../data/pages.json';
 import scripts from '../../data/scripts.json';
 import spells from '../../data/spells.json';
+import story from '../../data/story.json';
 import worldSource from '../../data/world.ldtk?raw';
 import { parseWorld, type LdtkProject } from '../world/ldtk.ts';
 import type { Content } from './types.ts';
@@ -18,9 +19,10 @@ export function loadContent(): Content {
     bosses: bosses as Content['bosses'],
     abilities,
     items,
-    spells: spells as Content['spells'],
+    spells: spells as unknown as Content['spells'],
     pages: pages as Content['pages'],
     clues,
     scripts,
+    story,
   };
 }

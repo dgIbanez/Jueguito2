@@ -6,6 +6,7 @@ import { describe, expect, it } from 'vitest';
 import { STEP } from '../../src/config.ts';
 import { idleIntent, type Intent } from '../../src/entities/player.ts';
 import type { Game } from '../../src/game/game.ts';
+import { supportedAt } from '../../src/world/collision.ts';
 import { playing, stand } from './helpers.ts';
 
 type Bot = (game: Game, frame: number) => Partial<Intent> | null;
@@ -49,30 +50,83 @@ function climb(game: Game, done: (g: Game) => boolean, frames = 1800): void {
   });
 }
 
+/**
+ * Hops up a staircase of platforms, given bottom-to-top as [left column, row].
+ * Past the last one it keeps jumping from it (to leave through the ceiling).
+ */
+function climbPlatforms(game: Game, route: number[][], done: (g: Game) => boolean, frames = 2400): void {
+  const room = game.room.id;
+  let targetX = -1;
+  drive(game, frames, (g) => {
+    if (done(g) || g.room.id !== room) return null;
+    const p = g.player;
+    const feet = p.y + p.h;
+    // From solid footing, aim for the lowest platform still above the feet;
+    // keep that aim while airborne, as a player would.
+    if (p.ground || targetX < 0) targetX = (route.find(([, row]) => row * 24 < feet) ?? route[route.length - 1])[0] * 24 + 36;
+    const moveX = Math.abs(p.x - targetX) > 6 ? Math.sign(targetX - p.x) : 0;
+    // Jump when close to the target, or from the edge of the current footing.
+    const atEdge = !supportedAt(g.room, moveX > 0 ? p.x + p.w + 4 : p.x - 4, feet);
+    const jump = p.ground && (Math.abs(p.x - targetX) < 100 || (atEdge && Math.abs(p.x - targetX) < 220));
+    return { moveX, jumpPressed: jump, jumpHeld: true };
+  });
+}
+
 describe('traversal with real physics', () => {
   it('Umbral: platforms climb to the Archivo without abilities', () => {
     const game = setup([], 'Umbral', 150, 480);
-    // Left column and row of each platform on the way up.
-    const route = [
-      [9, 17],
-      [17, 14],
-      [25, 11],
-      [33, 8],
-      [33, 5],
-      [33, 2],
-    ];
-    drive(game, 2400, (g) => {
-      if (g.room.id === 'Archivo') return null;
-      const p = g.player;
-      const feet = p.y + p.h;
-      // Aim for the lowest platform still above the player's feet.
-      const [cx] = route.find(([, row]) => row * 24 < feet) ?? route[route.length - 1];
-      const targetX = cx * 24 + 36;
-      const moveX = Math.abs(p.x - targetX) > 6 ? Math.sign(targetX - p.x) : 0;
-      const jump = p.ground && Math.abs(p.x - targetX) < 140;
-      return { moveX, jumpPressed: jump, jumpHeld: true };
-    });
+    climbPlatforms(game, [[9, 17], [17, 14], [25, 11], [33, 8], [33, 5], [33, 2]], (g) => g.room.id === 'Archivo');
     expect(game.room.id).toBe('Archivo');
+  });
+
+  it('Grieta: platforms climb back up through the throne hatch', () => {
+    const game = setup([], 'Grieta', 20 * 24, 648);
+    game.progress.flags.add('boss:groth');
+    climbPlatforms(game, [[25, 24], [17, 20], [9, 16], [17, 12], [25, 8], [17, 4]], () => false);
+    expect(game.room.id).toBe('Trono');
+    // Steer off the open hatch to land on the throne floor.
+    drive(game, 120, (g) => (g.player.ground ? null : { moveX: 1 }));
+    expect(game.room.id).toBe('Trono');
+    expect(game.player.y + game.player.h).toBe(480);
+  });
+
+  it('Cavernas: the Céfiro page is reachable without abilities', () => {
+    const game = setup([], 'Cavernas', 38 * 24, 504);
+    climbPlatforms(game, [[42, 17], [49, 13]], (g) => g.player.ground && g.player.y + g.player.h === 13 * 24);
+    expect(game.player.y + game.player.h).toBe(13 * 24);
+    expect(game.interactTarget()?.type).toBe('Page');
+  });
+
+  it('Lago: the Escarcha shelf needs the claws', () => {
+    const reach = (abilities: string[]) => {
+      const game = setup(abilities, 'Lago', 3 * 24, 504);
+      climb(game, (g) => g.player.y + g.player.h <= 4 * 24 - 30, 900);
+      drive(game, 300, (g) => (g.player.ground && g.player.x > 8 * 24 ? null : { moveX: 1 }));
+      return game.player.y + game.player.h === 4 * 24;
+    };
+    expect(reach([])).toBe(false);
+    expect(reach(['wall_jump'])).toBe(true);
+  });
+
+  it('Grieta: the crystal veil bars the arena until the wind breaks it', () => {
+    const walkRight = (open: boolean) => {
+      const game = setup([], 'Grieta', 30 * 24, 648);
+      if (open) game.progress.flags.add('gate:velo_cristal');
+      drive(game, 180, (g) => (g.room.id === 'Corazon' ? null : { moveX: 1 }));
+      return game.room.id;
+    };
+    expect(walkRight(false)).toBe('Grieta');
+    expect(walkRight(true)).toBe('Corazon');
+  });
+
+  it('the cavern floor connects the Grieta, the Cavernas and the Lago', () => {
+    const game = setup([], 'Grieta', 3 * 24, 648);
+    drive(game, 120, (g) => (g.room.id === 'Cavernas' ? null : { moveX: -1 }));
+    expect(game.room.id).toBe('Cavernas');
+    game.enterRoom('Cavernas', 6 * 24, 504 - 32);
+    game.enemies = [];
+    drive(game, 120, (g) => (g.room.id === 'Lago' ? null : { moveX: -1 }));
+    expect(game.room.id).toBe('Lago');
   });
 
   it('Copa: the page ledge needs the dash', () => {

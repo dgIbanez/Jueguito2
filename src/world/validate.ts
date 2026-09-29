@@ -40,8 +40,10 @@ function pageSolutionCheck(page: PageDef, c: Content): boolean | null {
       const script = [...(c.scripts[page.cipher.script] ?? '')];
       return read({ map: Object.fromEntries(script.map((g, i) => [g, ALPHABET[i]])) });
     }
-    case 'vigenere':
-      return null;
+    case 'vigenere': {
+      const word = c.clues.find((cl) => cl.id === page.keyClue)?.word;
+      return word ? read({ word }) : null;
+    }
   }
 }
 
@@ -105,15 +107,25 @@ export function validateWorld(c: Content): ValidationReport {
   for (const [id, boss] of Object.entries(c.bosses)) {
     for (const move of boss.pattern) if (!boss.moves[move]) errors.push(`Jefe ${id}: el patrón usa "${move}" sin definirlo en moves.`);
     for (const s of boss.summon) if (!c.enemies[s.kind]) errors.push(`Jefe ${id}: refuerzo desconocido "${s.kind}".`);
+    if (boss.reward && !c.items[boss.reward]) errors.push(`Jefe ${id}: recompensa desconocida "${boss.reward}".`);
+  }
+  for (const [id, spell] of Object.entries(c.spells)) {
+    if (!spell.levels?.length) errors.push(`Hechizo ${id}: necesita al menos un nivel.`);
+    if ((spell.upgrade?.length ?? 0) > spell.levels.length - 1) errors.push(`Hechizo ${id}: hay más costos de mejora que niveles.`);
+    for (const src of spell.fusion ?? []) if (!c.spells[src] || c.spells[src].fusion) errors.push(`Hechizo ${id}: la fusión usa "${src}", que no es un hechizo base.`);
+    if (spell.fusion && !spell.fusion.some((src) => c.pages.some((p) => p.spell === src))) errors.push(`Hechizo ${id}: ninguna página enseña sus hechizos base.`);
   }
   for (const page of c.pages) {
     if (!c.spells[page.spell]) errors.push(`Página ${page.id}: hechizo desconocido "${page.spell}".`);
+    if (c.spells[page.spell]?.fusion) errors.push(`Página ${page.id}: una página no puede enseñar una fusión ("${page.spell}").`);
+    if (page.keyClue && !clueIds.has(page.keyClue)) errors.push(`Página ${page.id}: la pista clave "${page.keyClue}" no existe.`);
+    if (page.cipher.type === 'vigenere' && !page.keyClue) warnings.push(`Página ${page.id}: Vigenère sin keyClue; la clave no aparece en el mundo.`);
     if (page.cipher.type === 'runes' && !c.scripts[page.cipher.script]) errors.push(`Página ${page.id}: escritura desconocida "${page.cipher.script}".`);
     const ok = pageSolutionCheck(page, c);
     if (ok === false) errors.push(`Página ${page.id}: ninguna clave produce la traducción registrada (solutionHash).`);
     if (ok === null) warnings.push(`Página ${page.id}: los cifrados ${page.cipher.type} no se verifican automáticamente.`);
   }
-  for (const clue of c.clues) if (!c.scripts[clue.script]) errors.push(`Pista ${clue.id}: escritura desconocida "${clue.script}".`);
+  for (const clue of c.clues) if (clue.script && !c.scripts[clue.script]) errors.push(`Pista ${clue.id}: escritura desconocida "${clue.script}".`);
 
   // Openings --------------------------------------------------------------
   const links = new Map<string, Set<string>>(rooms.map((r) => [r.id, new Set<string>()]));
@@ -155,6 +167,7 @@ export function validateWorld(c: Content): ValidationReport {
     return known;
   };
   const readable = (page: PageDef): boolean => {
+    if (page.keyClue && !have.has(`clue:${page.keyClue}`)) return false;
     if (page.cipher.type !== 'runes') return true;
     const known = glyphsKnown(page.cipher.script);
     const unknown = distinctGlyphs(page.ciphertext, c.scripts[page.cipher.script] ?? '').filter((g) => !known.has(g));
@@ -179,7 +192,12 @@ export function validateWorld(c: Content): ValidationReport {
       for (const e of r.entities) {
         if (collectable.includes(e.type) && meets(stringList(e.fields.requires))) gain(tokenOf(e)!);
         if (e.type === 'Gate' && have.has(text(e, 'opensWith'))) gain(`gate:${text(e, 'gateId')}`);
-        if (e.type === 'Boss' && (!text(e, 'trigger') || have.has(text(e, 'trigger')))) gain(`boss:${text(e, 'boss')}`);
+        if (e.type === 'Boss' && meets(stringList(e.fields.requires)) && (!text(e, 'trigger') || have.has(text(e, 'trigger')))) {
+          const boss = text(e, 'boss');
+          gain(`boss:${boss}`);
+          const reward = c.bosses[boss]?.reward;
+          if (reward) gain(`item:${reward}`);
+        }
       }
     }
     for (const page of c.pages) if (have.has(`page:${page.id}`) && have.has('item:grimoire') && readable(page)) gain(`spell:${page.spell}`);

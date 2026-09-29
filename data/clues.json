@@ -19,5 +19,11 @@
     "text": "Un caminante sentado bajo un árbol, inmóvil. Seis signos lo rodean. En el marco, pintado con ocre:",
     "script": "iulin",
     "word": "ESPERA"
+  },
+  {
+    "id": "lapida_escriba",
+    "title": "Lápida sin nombre",
+    "text": "Junto al agua quieta, una lápida sin nombre. Alguien raspó una única palabra, profunda, como si fuera la llave de algo:",
+    "word": "TORRE"
   }
 ]

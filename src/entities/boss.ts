@@ -20,6 +20,7 @@ export function createBoss(id: string, def: BossDef, ax: number, ay: number): En
     x: ax - def.w / 2, y: ay - def.h, w: def.w, h: def.h, vx: 0, vy: 0,
     ground: false, groundTile: Tile.Empty, hitWall: 0,
     hp: def.hp, max: def.hp, face: -1, state: 'idle', timer: 1.5, hit: 0, attackId: -1, lock: -1,
+    home: { x: ax - def.w / 2, y: ay - def.h }, frozen: 0, knock: 0, knockVx: 0, burnCd: 0,
     boss: { id, def, turn: 0, move: def.pattern[0], hordeCalled: false, target: ax },
   };
 }
@@ -53,6 +54,22 @@ const STRIKES: Record<string, { start(e: Enemy, m: BossMoveDef, ctx: BossContext
         ctx.shake(0.3);
         e.timer = 0;
       }
+    },
+  },
+  rain: {
+    // Crystals fall around where the player stands, leaving gaps to dodge through.
+    start(e, m, ctx, enraged) {
+      const count = m.count ?? 5;
+      const speed = pick(enraged, m.speed ?? 300, m.speedEnraged);
+      const center = centerX(ctx.player);
+      for (let i = 0; i < count; i++) {
+        const x = clamp(center + (i - (count - 1) / 2) * 84 + (Math.random() - 0.5) * 20, 30, ctx.room.w - 40);
+        ctx.fireArrow({ x, y: 26, w: 10, h: 16, vx: 0, vy: speed * (0.75 + Math.random() * 0.5), life: 4, shard: true });
+      }
+      e.vx = 0;
+    },
+    update(e) {
+      e.vx = 0;
     },
   },
   charge: {

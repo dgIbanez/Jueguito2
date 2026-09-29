@@ -1,6 +1,18 @@
 # Runas Rotas
 
-Metroidvania de salas y jefes con un grimorio de páginas cifradas. El personaje empieza con movimiento básico, gana mejoras (impulso, garras para saltar en paredes, doble salto) y aprende magia descifrando páginas perdidas. Solo teclado. Se publica como sitio estático en GitHub Pages.
+Metroidvania de salas y jefes con un grimorio de páginas cifradas. Solo teclado. Se publica como sitio estático en GitHub Pages.
+
+Fuiste invocado desde nuestro mundo por Iulin Saerh, el escriba de la Torre Gris. El ritual para volver está repartido en las páginas arrancadas de su grimorio, y cada jefe guarda un sello del círculo. Empezás con movimiento básico, ganás mejoras (impulso, garras para saltar en paredes, doble salto) y aprendés magia descifrando páginas.
+
+- **Capítulo I · El bosque olvidado:** Groth, el Rey Goblin.
+- **Capítulo II · Las Cavernas del Eco:** bajo el trono de Groth. Vharn, el Centinela de Cuarzo.
+
+## Magia
+
+- Cada página descifrada enseña una magia. Cifrados: César, runas (con murales), Atbash y Vigenère (la clave está grabada en el mundo).
+- **Ranuras:** solo se lanzan las magias equipadas. Empezás con 2 y cada sello de jefe suma una. Se cambian descansando en un santuario.
+- **Niveles:** los enemigos sueltan esquirlas de maná (✦). En el santuario se gastan para subir cada magia hasta nivel 3.
+- **Fusiones:** dos magias en nivel 2 se funden en una nueva: Ascua + Céfiro = Torbellino ígneo, Ascua + Égida = Égida ígnea, Céfiro + Escarcha = Ventisca.
 
 ## Controles (reasignables en Pausa → Reasignar teclas)
 
@@ -11,8 +23,8 @@ Metroidvania de salas y jefes con un grimorio de páginas cifradas. El personaje
 | Espada · golpe descendente en el aire | J · S/↓ + J |
 | Bajar de una plataforma | S/↓ + saltar |
 | Impulso | Shift |
-| Hechizos | K · L |
-| Interactuar | E |
+| Magias equipadas (ranuras 1–4) | K · L · I · O |
+| Interactuar / descansar | E |
 | Grimorio · Mapa · Pausa · Pantalla completa | Tab · M · Esc · F |
 
 ## Desarrollo
@@ -34,39 +46,40 @@ Con `?debug` en la URL (o en `npm run dev`) queda disponible `window.runas` con 
 ```
 data/                 contenido: lo que se edita para crear el juego
   world.ldtk            salas, terreno y entidades (editor LDtk)
-  enemies.json          estadísticas de cada enemigo
-  bosses.json           jefes: vida, patrón de ataques, refuerzos, texto de victoria
+  story.json            prólogo
+  enemies.json          estadísticas de cada enemigo (y esquirlas que sueltan)
+  bosses.json           jefes: vida, patrón de ataques, refuerzos, sello, texto de victoria
   abilities.json        mejoras de movimiento
-  items.json            mapa y grimorio
-  spells.json           hechizos que enseñan las páginas
+  items.json            mapa, grimorio y sellos (cada sello suma una ranura)
+  spells.json           magias: niveles, costos de mejora y fusiones
   pages.json            páginas cifradas (texto cifrado + hash de la solución)
-  clues.json            murales que revelan signos de la escritura rúnica
+  clues.json            murales rúnicos e inscripciones con claves
   scripts.json          alfabetos rúnicos
 src/
   core/                 entrada, sonido, guardado versionado, preferencias
   world/                lectura de LDtk, colisiones por casillas, validador
-  entities/             personaje, enemigos, jefe
-  magic/                motor de cifrados y hash de soluciones
+  entities/             personaje, enemigos (a pie, arqueros, voladores), jefes
+  magic/                cifrados, ranuras/niveles/fusiones, efectos de cada magia
   game/                 simulación (sin DOM: se prueba con Vitest)
   render/               dibujo en Canvas: fondos, casillas, sprites, objetos
-  ui/                   menús, grimorio, herramientas de descifrado, mapa, HUD
+  ui/                   menús, grimorio, descifrado, santuario, mapa, HUD
 scripts/
   validate-world.ts     revisa referencias, aberturas y progresión
   encode-page.ts        cifra una página nueva y calcula su hash
-  seed-world.mjs        generó el world.ldtk inicial (no volver a usar)
-tests/unit/             Vitest: física, cifrados, guardado, combate, recorridos
-tests/e2e/              Playwright: menús, teclado, grimorio, mapa, capturas
+  seed-world.mjs        generador del mundo (ver abajo)
+tests/unit/             Vitest: física, cifrados, magias, guardado, combate, recorridos
+tests/e2e/              Playwright: menús, teclado, grimorio, santuario, capturas
 ```
 
-La simulación (`src/game`) no toca el DOM: emite eventos (`toast`, `openPage`, `victory`…) y la interfaz los escucha. Por eso casi todo se prueba sin navegador.
+La simulación (`src/game`) no toca el DOM: emite eventos (`toast`, `openPage`, `shrine`, `victory`…) y la interfaz los escucha. Por eso casi todo se prueba sin navegador.
 
 ## Cómo agregar contenido
 
-**Una sala.** Abrí `data/world.ldtk` con [LDtk](https://ldtk.io). La capa `Collision` tiene tres valores: `solid` (pared), `oneway` (plataforma que se atraviesa desde abajo) y `spikes` (zarzas que dañan). Las salas se conectan solas por su posición en el mundo: una abertura en el borde lleva a la sala vecina. Cada sala tiene los campos `name`, `biome` (`forest`, `canopy`, `ruins`, `boss`) y `requires`.
+**Una sala.** Hasta ahora el mundo se genera con `npm run seed-world -- --force`, que sobrescribe `data/world.ldtk`. Si empezás a editar el mundo con [LDtk](https://ldtk.io), ese archivo pasa a ser la fuente de verdad y el generador no se vuelve a usar. La capa `Collision` tiene `solid` (pared), `oneway` (plataforma que se atraviesa desde abajo) y `spikes` (púas). Las salas se conectan solas por su posición: una abertura en el borde lleva a la sala vecina. Cada sala tiene `name`, `biome` (`forest`, `canopy`, `ruins`, `boss`, `caves`) y `requires`.
 
-**Entidades** (capa `Entities`): `PlayerStart`, `Shrine`, `Item` (`item`), `Ability` (`ability`), `Page` (`page`), `Clue` (`clue`), `Enemy` (`kind`), `Boss` (`boss`, `trigger`) y `Gate` (`gateId`, `opensWith`, redimensionable).
+**Entidades** (capa `Entities`): `PlayerStart`, `Shrine`, `Item` (`item`), `Ability` (`ability`), `Page` (`page`), `Clue` (`clue`), `Enemy` (`kind`), `Boss` (`boss`, `trigger`) y `Gate` (`gateId`, `opensWith`, `style`: `thorns`, `stone` o `crystal`; redimensionable).
 
-**Requisitos.** Los campos `requires`, `opensWith` y `trigger` usan fichas `tipo:id`: `ability:dash`, `spell:ascua`, `item:grimoire`, `gate:thorns_throne`, `boss:groth`. El validador simula la progresión con esas fichas y avisa si algo queda inalcanzable.
+**Requisitos.** `requires`, `opensWith` y `trigger` usan fichas `tipo:id`: `ability:dash`, `spell:ascua`, `item:grimoire`, `gate:thorns_throne`, `boss:groth`. Una compuerta con `spell:x` se abre al golpearla con esa magia (o con una fusión que la contenga); con cualquier otra ficha se abre sola al conseguirla. El validador simula la progresión y avisa si algo queda inalcanzable.
 
 **Una página del grimorio.**
 
@@ -77,15 +90,17 @@ npm run encode-page -- page_nueva vigenere "EL TEXTO SECRETO" CLAVE
 npm run encode-page -- page_nueva runes "EL TEXTO SECRETO" iulin
 ```
 
-Copiá `cipher`, `ciphertext` y `solutionHash` a `data/pages.json` y agregá el hechizo en `spells.json`. El texto original no se guarda: el juego compara el hash de la traducción del jugador. Para las páginas rúnicas, los murales (`clues.json`) enseñan palabras completas; `maxUnknown` fija cuántos signos puede tener que deducir el jugador.
+Copiá `cipher`, `ciphertext` y `solutionHash` a `data/pages.json`. El texto original no se guarda: el juego compara el hash de la traducción. En las páginas rúnicas, `maxUnknown` fija cuántos signos debe deducir el jugador; en las Vigenère, `keyClue` apunta a la inscripción con la clave.
 
-**Un enemigo o un jefe.** Los valores van en `enemies.json` o `bosses.json`. Los comportamientos (`melee`, `archer`) y los movimientos del jefe (`slash`, `leap`, `charge`) están en `src/entities/`; un comportamiento nuevo se agrega ahí y se referencia desde los datos.
+**Una magia.** En `spells.json`: `effect` (`fire`, `frost`, `vortex`, `shield`, `gust`), `cost`, un objeto por nivel en `levels` (daño, velocidad, duración, alcance, congelamiento…) y `upgrade` con el costo de cada mejora. Una fusión lleva `fusion: [a, b]` y `fuseCost`, y no la enseña ninguna página. Un efecto nuevo se programa en `src/magic/effects.ts`.
+
+**Un enemigo o un jefe.** Los valores van en `enemies.json` o `bosses.json`. Los comportamientos (`melee`, `archer`, `flyer`) y los movimientos de jefe (`slash`, `leap`, `charge`, `rain`) están en `src/entities/`; uno nuevo se agrega ahí y se referencia desde los datos.
 
 Después de cualquier cambio, `npm run check` confirma que todo sigue siendo alcanzable.
 
 ## Guardado
 
-El guardado vive en el `localStorage` del navegador (clave `runas-rotas-save`) e incluye un número de versión. Las partidas de la versión 1 se migran automáticamente. Con almacenamiento bloqueado se puede jugar sin guardar.
+El guardado vive en el `localStorage` del navegador (clave `runas-rotas-save`) e incluye un número de versión. Las partidas anteriores se migran solas: conservan sus magias equipadas y reciben el sello de los jefes ya vencidos. Con almacenamiento bloqueado se puede jugar sin guardar.
 
 ## Publicación
 

@@ -1,6 +1,6 @@
 import type { Intent } from '../entities/player.ts';
 
-export type Action = 'left' | 'right' | 'down' | 'jump' | 'attack' | 'dash' | 'spell1' | 'spell2' | 'interact' | 'grimoire' | 'map';
+export type Action = 'left' | 'right' | 'down' | 'jump' | 'attack' | 'dash' | 'spell1' | 'spell2' | 'spell3' | 'spell4' | 'interact' | 'grimoire' | 'map';
 export type Bindings = Record<Action, string[]>;
 
 export const ACTIONS: { id: Action; label: string }[] = [
@@ -10,8 +10,10 @@ export const ACTIONS: { id: Action; label: string }[] = [
   { id: 'jump', label: 'Saltar' },
   { id: 'attack', label: 'Espada' },
   { id: 'dash', label: 'Impulso' },
-  { id: 'spell1', label: 'Hechizo I' },
-  { id: 'spell2', label: 'Hechizo II' },
+  { id: 'spell1', label: 'Magia · ranura 1' },
+  { id: 'spell2', label: 'Magia · ranura 2' },
+  { id: 'spell3', label: 'Magia · ranura 3' },
+  { id: 'spell4', label: 'Magia · ranura 4' },
   { id: 'interact', label: 'Interactuar' },
   { id: 'grimoire', label: 'Grimorio' },
   { id: 'map', label: 'Mapa' },
@@ -26,10 +28,15 @@ export const DEFAULT_BINDINGS: Bindings = {
   dash: ['ShiftLeft', 'ShiftRight'],
   spell1: ['KeyK'],
   spell2: ['KeyL'],
+  spell3: ['KeyI'],
+  spell4: ['KeyO'],
   interact: ['KeyE'],
   grimoire: ['Tab'],
   map: ['KeyM'],
 };
+
+/** Cast actions, in slot order. */
+export const SPELL_ACTIONS: Action[] = ['spell1', 'spell2', 'spell3', 'spell4'];
 
 /** Keys the game never lets the player rebind. */
 export const RESERVED = new Set(['Escape', 'KeyF', 'Enter']);
@@ -111,7 +118,7 @@ export class Input {
       attackPressed: this.wasPressed('attack'),
       dashPressed: this.wasPressed('dash'),
       interactPressed: this.wasPressed('interact'),
-      castSlot: this.wasPressed('spell1') ? 1 : this.wasPressed('spell2') ? 2 : 0,
+      castSlot: SPELL_ACTIONS.findIndex((a) => this.wasPressed(a)) + 1,
     };
   }
 

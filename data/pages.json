@@ -23,5 +23,30 @@
     "maxUnknown": 2,
     "note": "«Ya no son letras cambiadas: son signos que nunca vi. Los mismos que tallaron en las piedras del bosque. Si reúno lo que dicen los murales, quizá pueda leerla. La firma, otra vez, parece la de Iulin».",
     "failHint": "Algunos signos siguen sin sentido. Los murales enseñan palabras enteras; lo que falte puede deducirse de las palabras que ya se leen."
+  },
+  {
+    "id": "page_cefiro",
+    "numeral": "IV",
+    "title": "Letras frente al espejo",
+    "cipher": { "type": "atbash" },
+    "ciphertext": "VO ERVMGL ZKZIGZ OL JFV HV ZXVIXZ",
+    "signature": "RFORM HZVIS",
+    "solutionHash": "06ce058df4e487",
+    "spell": "cefiro",
+    "note": "«Otra vez Iulin. Pero esta vez el margen habla de mí: \"el que llegó por el círculo\". Las letras parecen dadas vuelta, como vistas en el reflejo de un charco».",
+    "failHint": "Sigue sin sentido. ¿Y si la leyeras como en un espejo, donde la primera letra es la última?"
+  },
+  {
+    "id": "page_escarcha",
+    "numeral": "V",
+    "title": "Una palabra marca el paso",
+    "cipher": { "type": "vigenere" },
+    "ciphertext": "XZ WIMH RVKMXBV CS JIV RZTBQR",
+    "signature": "BICZR LOVIL",
+    "solutionHash": "00cc8dc854cffc",
+    "spell": "escarcha",
+    "keyClue": "lapida_escriba",
+    "note": "«Cada letra cambia de forma distinta: no hay un único desplazamiento. Es como si una palabra marcara el ritmo. Al pie, Iulin menciona una tumba junto al agua, y la torre adonde tengo que llegar para cerrar el círculo y volver».",
+    "failHint": "Las letras no encajan. La palabra que marca el ritmo tiene que estar escrita en algún lugar de las cavernas."
   }
 ]

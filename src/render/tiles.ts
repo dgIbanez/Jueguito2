@@ -12,9 +12,10 @@ interface Palette {
 }
 
 const EARTH: Palette = { soil: '#29372a', top: '#839552', top2: '#4e673b', tuft: '#6c8448', speck: '#1a2b22', edge: '#1d2a20' };
+const CRYSTAL: Palette = { soil: '#262b3d', top: '#6f7fa6', top2: '#3e4868', tuft: '#8fd0e0', speck: '#161a28', edge: '#121524', line: '#1e2334' };
 const STONE: Palette = { soil: '#2c3530', top: '#7f8a67', top2: '#4d5844', tuft: '#6c8448', speck: '#1c241f', edge: '#1a211c', line: '#222b24' };
 
-const paletteFor = (biome: string): Palette => (biome === 'ruins' || biome === 'boss' ? STONE : EARTH);
+const paletteFor = (biome: string): Palette => (biome === 'caves' ? CRYSTAL : biome === 'ruins' || biome === 'boss' ? STONE : EARTH);
 
 function solidCell(ctx: Ctx, room: RoomData, pal: Palette, cx: number, cy: number): void {
   const T = room.tile;
@@ -45,14 +46,14 @@ function oneWayCell(ctx: Ctx, room: RoomData, pal: Palette, cx: number, cy: numb
   const x = cx * T;
   const y = cy * T;
   const h = cellHash(cx, cy);
-  rect(ctx, x, y, T, 14, '#29372a');
-  rect(ctx, x, y, T, 5, pal === STONE ? '#8b8a68' : '#839552');
-  rect(ctx, x, y + 5, T, 5, pal === STONE ? '#5a5a45' : '#4e673b');
-  rect(ctx, x + (h % 14), y - 3 - (h % 3), 9, 5, '#6c8448');
+  rect(ctx, x, y, T, 14, pal.soil);
+  rect(ctx, x, y, T, 5, pal === STONE ? '#8b8a68' : pal === CRYSTAL ? '#8a97bd' : '#839552');
+  rect(ctx, x, y + 5, T, 5, pal === STONE ? '#5a5a45' : pal === CRYSTAL ? '#4a5577' : '#4e673b');
+  rect(ctx, x + (h % 14), y - 3 - (h % 3), 9, 5, pal.tuft);
   rect(ctx, x + 3 + (h % 9), y + 12, 9, 4, '#39462e');
   if (h % 3 === 0) {
-    rect(ctx, x + 8, y + 14, 3, 12 + (h % 11), '#3d5635');
-    rect(ctx, x + 5, y + 20, 6, 3, '#5c7040');
+    rect(ctx, x + 8, y + 14, 3, 12 + (h % 11), pal === CRYSTAL ? pal.top2 : '#3d5635');
+    rect(ctx, x + 5, y + 20, 6, 3, pal === CRYSTAL ? pal.tuft : '#5c7040');
   }
 }
 
@@ -66,17 +67,18 @@ function spikeCell(ctx: Ctx, room: RoomData, cx: number, cy: number): void {
   ctx.save();
   ctx.translate(x + T / 2, y + T / 2);
   ctx.rotate(Math.atan2(dy, dx) + Math.PI / 2);
-  rect(ctx, -12, 8, 24, 4, '#3f4a2b');
+  const ice = room.biome === 'caves';
+  rect(ctx, -12, 8, 24, 4, ice ? '#2a3048' : '#3f4a2b');
   for (let i = 0; i < 3; i++) {
     const bx = -11 + i * 8;
-    ctx.fillStyle = i % 2 ? '#6d7a45' : '#56633a';
+    ctx.fillStyle = ice ? (i % 2 ? '#8fd0e0' : '#6fa9c2') : i % 2 ? '#6d7a45' : '#56633a';
     ctx.beginPath();
     ctx.moveTo(bx, 10);
     ctx.lineTo(bx + 3.5, -11);
     ctx.lineTo(bx + 7, 10);
     ctx.fill();
-    rect(ctx, bx + 3, -11, 2, 4, '#e0d5a4');
-    rect(ctx, bx + 1, -2, 2, 2, '#9b3b2c');
+    rect(ctx, bx + 3, -11, 2, 4, ice ? '#eaf8ff' : '#e0d5a4');
+    if (!ice) rect(ctx, bx + 1, -2, 2, 2, '#9b3b2c');
   }
   ctx.restore();
 }

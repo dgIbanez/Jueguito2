@@ -4,8 +4,59 @@ import { rect, type Ctx } from './draw.ts';
 const SKY: Record<string, string> = { forest: '#24473d', canopy: '#42654f', ruins: '#233f37', boss: '#2b3d31' };
 const wrap = (n: number, m: number): number => ((n % m) + m) % m;
 
+/** Underground backdrop: layered stalactites and glowing crystal clusters. */
+function caves(ctx: Ctx, time: number, camX: number): void {
+  const g = ctx.createLinearGradient(0, 0, 0, VIEW_H);
+  g.addColorStop(0, '#1d2439');
+  g.addColorStop(1, '#0a0d18');
+  ctx.fillStyle = g;
+  ctx.fillRect(0, 0, VIEW_W, VIEW_H);
+  for (let layer = 0; layer < 3; layer++) {
+    const col = ['#232b44', '#1a2135', '#141a2a'][layer];
+    const shift = camX * (0.12 + layer * 0.12);
+    for (let i = 0; i < 12; i++) {
+      const x = wrap(i * 97 + layer * 41 - shift, 1160) - 100;
+      const len = 60 + ((i * 53 + layer * 29) % 140);
+      const w = 22 + layer * 10;
+      ctx.fillStyle = col;
+      ctx.beginPath();
+      ctx.moveTo(x, 0);
+      ctx.lineTo(x + w, 0);
+      ctx.lineTo(x + w / 2, len);
+      ctx.fill();
+      ctx.beginPath();
+      ctx.moveTo(x + 30, VIEW_H);
+      ctx.lineTo(x + 30 + w, VIEW_H);
+      ctx.lineTo(x + 30 + w / 2, VIEW_H - len * 0.7);
+      ctx.fill();
+    }
+  }
+  for (let i = 0; i < 9; i++) {
+    const x = wrap(i * 131 - camX * 0.45, 1100) - 70;
+    const y = 120 + ((i * 71) % 300);
+    ctx.globalAlpha = 0.25 + Math.sin(time * 1.3 + i) * 0.12;
+    ctx.fillStyle = i % 2 ? '#7fd3e6' : '#a88be0';
+    ctx.beginPath();
+    ctx.moveTo(x, y);
+    ctx.lineTo(x + 7, y - 26);
+    ctx.lineTo(x + 14, y);
+    ctx.fill();
+    ctx.beginPath();
+    ctx.moveTo(x + 10, y);
+    ctx.lineTo(x + 18, y - 16);
+    ctx.lineTo(x + 24, y);
+    ctx.fill();
+  }
+  for (let i = 0; i < 30; i++) {
+    ctx.globalAlpha = 0.2 + Math.sin(time * 1.1 + i * 2) * 0.15;
+    rect(ctx, wrap(i * 89 - camX * 0.6, VIEW_W), (i * 53 + Math.sin(time * 0.4 + i) * 12) % 500, 2, 2, '#bfe6ff');
+  }
+  ctx.globalAlpha = 1;
+}
+
 /** Screen-space forest backdrop; layers drift with the camera for parallax. */
 export function drawBackground(ctx: Ctx, biome: string, time: number, camX: number): void {
+  if (biome === 'caves') return caves(ctx, time, camX);
   const g = ctx.createLinearGradient(0, 0, 0, VIEW_H);
   g.addColorStop(0, SKY[biome] ?? SKY.forest);
   g.addColorStop(1, '#0b231e');

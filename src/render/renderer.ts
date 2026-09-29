@@ -66,8 +66,37 @@ export class Renderer {
     if (game.mode !== 'title') drawHero(ctx, game.player, time);
     for (const a of game.arrows) drawArrow(ctx, a);
     for (const s of game.shots) {
-      rect(ctx, s.x, s.y, 12, 8, '#f2d091');
-      rect(ctx, s.x + 3, s.y + 2, 6, 4, '#fff1b1');
+      if (s.kind === 'vortex') {
+        ctx.save();
+        ctx.translate(s.x + s.w / 2, s.y + s.h / 2);
+        for (let i = 0; i < 3; i++) {
+          ctx.rotate(time * 9 + i * 2.1);
+          ctx.strokeStyle = ['#f08a3c', '#f2d091', '#c4552f'][i];
+          ctx.lineWidth = 3;
+          ctx.beginPath();
+          ctx.arc(0, 0, 10 + i * 5, 0, Math.PI * 1.2);
+          ctx.stroke();
+        }
+        ctx.restore();
+      } else if (s.kind === 'frost') {
+        rect(ctx, s.x, s.y, 12, 8, '#8fd0e0');
+        rect(ctx, s.x + 3, s.y + 2, 6, 4, '#eaf8ff');
+      } else {
+        rect(ctx, s.x, s.y, 12, 8, '#f2d091');
+        rect(ctx, s.x + 3, s.y + 2, 6, 4, '#fff1b1');
+      }
+    }
+    for (const fx of game.effects) {
+      // Wind streaks sweeping away from the player.
+      const k = 1 - fx.life / fx.max;
+      ctx.globalAlpha = 1 - k;
+      const color = fx.kind === 'blizzard' ? '#dff4ff' : '#d8e8d0';
+      for (let i = 0; i < 6; i++) {
+        const len = fx.w * (0.3 + 0.1 * (i % 3));
+        const sx = fx.face > 0 ? fx.x + k * (fx.w - len) : fx.x + fx.w - len - k * (fx.w - len);
+        rect(ctx, sx, fx.y + 8 + i * ((fx.h - 16) / 5), len, 2, color);
+      }
+      ctx.globalAlpha = 1;
     }
     for (const w of game.waves) {
       rect(ctx, w.x, w.y, w.w, w.h, '#c8b37b');

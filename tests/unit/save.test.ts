@@ -51,7 +51,9 @@ describe('save', () => {
     expect(game.room.id).toBe('Archivo');
     expect([...p.visited]).toEqual(expect.arrayContaining(['Umbral', 'Sendero', 'Archivo', 'Copa']));
     // Continuing rewrites the save in the new format.
-    expect(JSON.parse(storage.getItem(STORAGE.save)!).version).toBe(2);
+    expect(JSON.parse(storage.getItem(STORAGE.save)!).version).toBe(3);
+    // Spells learned before loadouts existed stay castable.
+    expect(p.loadout).toEqual(['ascua']);
   });
 
   it('keeps discoveries when continuing and restores health', () => {

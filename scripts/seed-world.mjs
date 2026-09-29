@@ -157,7 +157,7 @@ const entityDefs = Object.fromEntries(
     entityDef('Clue', '#B6C28A', 48, 56, [fieldDef('clue', { def: 'mural_' })]),
     entityDef('Enemy', '#BE4A2F', 24, 32, [fieldDef('kind', { def: 'goblin' })]),
     entityDef('Boss', '#C47459', 52, 72, [fieldDef('boss', { def: 'groth' }), fieldDef('trigger')]),
-    entityDef('Gate', '#53623A', T, T * 10, [fieldDef('gateId', { def: 'gate' }), fieldDef('opensWith', { def: 'spell:ascua' })], { resizable: true }),
+    entityDef('Gate', '#53623A', T, T * 10, [fieldDef('gateId', { def: 'gate' }), fieldDef('opensWith', { def: 'spell:ascua' }), fieldDef('style', { def: 'thorns' })], { resizable: true }),
   ].map((d) => [d.identifier, d]),
 );
 
@@ -207,10 +207,11 @@ function room(identifier, name, biome, tx, ty, cols, rows, requires = []) {
       r.entities.push({ def, px: [cx * T + T / 2, (cy + 1) * T], width: def.width, height: def.height, fields });
       return r;
     },
-    /** A one-tile-wide gate spanning rows y0..y1 in column cx. */
-    gate(cx, y0, y1, fields) {
+    /** A gate covering cells (x0, y0)..(x1, y1); solid until opened. */
+    gate(x0, y0, x1, y1, fields) {
       const def = entityDefs.Gate;
-      r.entities.push({ def, px: [cx * T + T / 2, (y1 + 1) * T], width: T, height: (y1 - y0 + 1) * T, fields });
+      const width = (x1 - x0 + 1) * T;
+      r.entities.push({ def, px: [x0 * T + width / 2, (y1 + 1) * T], width, height: (y1 - y0 + 1) * T, fields });
       return r;
     },
   };
@@ -247,7 +248,9 @@ room('Trono', 'El trono de espinas', 'boss', 100, 53, 40, 23)
   .frame()
   .clear(0, 15, 0, 19)
   .plat(8, 16, 6).plat(26, 16, 6)
-  .gate(5, 1, 19, { gateId: 'thorns_throne', opensWith: 'spell:ascua' })
+  .clear(18, 20, 21, 22)
+  .gate(5, 1, 5, 19, { gateId: 'thorns_throne', opensWith: 'spell:ascua', style: 'thorns' })
+  .gate(18, 20, 21, 22, { gateId: 'trono_hatch', opensWith: 'boss:groth', style: 'stone' })
   .add('Boss', 30, 19, { boss: 'groth', trigger: 'gate:thorns_throne' });
 
 room('Archivo', 'Archivo de las raíces', 'ruins', 0, 30, 40, 23)
@@ -317,6 +320,51 @@ room('Galeria', 'Galería de los murales', 'ruins', 0, 7, 40, 23, ['ability:doub
   .add('Page', 19, 19, { page: 'page_egida', requires: [] })
   .add('Enemy', 14, 14, { kind: 'archer' })
   .add('Enemy', 26, 19, { kind: 'hob' });
+
+// Chapter II: the Echo Caverns, below the throne (rows 76+).
+
+room('Grieta', 'La grieta del trono', 'caves', 100, 76, 40, 30, ['gate:trono_hatch'])
+  .frame()
+  .clear(18, 0, 21, 0)
+  .clear(0, 22, 0, 26)
+  .clear(39, 22, 39, 26)
+  .fill(34, 1, 38, 19)
+  .plat(17, 4, 6).plat(25, 8, 6).plat(17, 12, 6).plat(9, 16, 6).plat(17, 20, 6).plat(25, 24, 6)
+  .gate(36, 20, 36, 26, { gateId: 'velo_cristal', opensWith: 'spell:cefiro', style: 'crystal' })
+  .add('Shrine', 12, 26)
+  .add('Enemy', 8, 9, { kind: 'bat' })
+  .add('Enemy', 28, 26, { kind: 'crawler' });
+
+room('Cavernas', 'Cavernas del eco', 'caves', 40, 82, 60, 24)
+  .frame()
+  .clear(0, 16, 0, 20)
+  .clear(59, 16, 59, 20)
+  .plat(8, 17, 6).plat(16, 13, 6).plat(26, 10, 5)
+  .spikes(31, 20, 35, 20)
+  .plat(42, 17, 5).plat(49, 13, 5)
+  .add('Page', 51, 12, { page: 'page_cefiro', requires: [] })
+  .add('Enemy', 12, 20, { kind: 'crawler' })
+  .add('Enemy', 45, 20, { kind: 'crawler' })
+  .add('Enemy', 22, 7, { kind: 'bat' })
+  .add('Enemy', 40, 8, { kind: 'bat' })
+  .add('Enemy', 28, 9, { kind: 'archer' });
+
+room('Lago', 'El lago quieto', 'caves', 0, 82, 40, 24)
+  .frame()
+  .clear(39, 16, 39, 20)
+  .fill(6, 4, 6, 17)
+  .fill(7, 4, 14, 4)
+  .plat(20, 17, 6)
+  .add('Clue', 26, 20, { clue: 'lapida_escriba' })
+  .add('Page', 11, 3, { page: 'page_escarcha', requires: ['ability:wall_jump'] })
+  .add('Enemy', 20, 8, { kind: 'bat' })
+  .add('Enemy', 32, 20, { kind: 'crawler' });
+
+room('Corazon', 'Corazón de cuarzo', 'caves', 140, 83, 40, 23, ['gate:velo_cristal'])
+  .frame()
+  .clear(0, 15, 0, 19)
+  .plat(8, 16, 6).plat(26, 16, 6)
+  .add('Boss', 30, 19, { boss: 'vharn' });
 
 // ---------------------------------------------------------------- project
 

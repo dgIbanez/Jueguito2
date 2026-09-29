@@ -1,6 +1,6 @@
 import type { Content } from '../content/types.ts';
 import { fieldText, type Game } from '../game/game.ts';
-import { runesEncode } from '../magic/ciphers.ts';
+import { carved } from '../magic/ciphers.ts';
 import type { EntitySpawn } from '../world/ldtk.ts';
 import { label, rect, RUNE_FONT, type Ctx } from './draw.ts';
 
@@ -63,16 +63,27 @@ function page(ctx: Ctx, x: number, y: number, bob: number): void {
 
 function mural(ctx: Ctx, content: Content, e: EntitySpawn, x: number, y: number): void {
   const clue = content.clues.find((c) => c.id === fieldText(e, 'clue'));
+  if (clue && !clue.script) {
+    // A plain gravestone with one scratched word.
+    rect(ctx, x - 18, y - 44, 36, 44, '#4f5566');
+    rect(ctx, x - 14, y - 50, 28, 8, '#4f5566');
+    rect(ctx, x - 14, y - 40, 28, 36, '#646b7e');
+    rect(ctx, x - 22, y - 4, 44, 4, '#343847');
+    label(ctx, clue.word, x, y - 22, '#2a2e3a', 9, 'Georgia, serif');
+    return;
+  }
   rect(ctx, x - 24, y - 56, 48, 56, '#4d574a');
   rect(ctx, x - 20, y - 52, 40, 48, '#66705d');
   rect(ctx, x - 20, y - 52, 40, 3, '#7b8570');
   rect(ctx, x - 26, y - 4, 52, 4, '#3a4238');
-  if (clue) label(ctx, runesEncode(clue.word, content.scripts[clue.script] ?? ''), x, y - 24, '#2c3527', 12, RUNE_FONT);
+  if (clue) label(ctx, carved(clue.word, clue.script && content.scripts[clue.script]), x, y - 24, '#2c3527', 12, RUNE_FONT);
   rect(ctx, x - 12, y - 16, 24, 2, '#57614f');
 }
 
+type Box = { x: number; y: number; w: number; h: number };
+
 /** Burned by fire: a wall of old thorns filling the gate's rectangle. */
-export function drawGate(ctx: Ctx, g: { x: number; y: number; w: number; h: number }): void {
+function thorns(ctx: Ctx, g: Box): void {
   const x = g.x + g.w / 2;
   const bottom = g.y + g.h;
   for (let i = 0; i * 18 < g.h - 10; i++) {
@@ -80,6 +91,41 @@ export function drawGate(ctx: Ctx, g: { x: number; y: number; w: number; h: numb
     rect(ctx, x - 19, bottom - 16 - i * 18, 35, 5, '#71834a');
     rect(ctx, x - 15 + (i % 3) * 9, bottom - 12 - i * 18, 3, 3, '#d9cf9e');
   }
+}
+
+/** A sealed stone slab that cracks open when its keeper falls. */
+function stone(ctx: Ctx, g: Box): void {
+  rect(ctx, g.x, g.y, g.w, g.h, '#3b4035');
+  for (let row = 0; row * 12 < g.h; row++)
+    for (let col = -1; col * 24 < g.w; col++) {
+      const bx = g.x + col * 24 + (row % 2) * 12;
+      rect(ctx, Math.max(g.x, bx) + 1, g.y + row * 12 + 1, Math.min(22, g.x + g.w - Math.max(g.x, bx) - 1), 10, row === 0 ? '#6f7560' : '#565c4b');
+    }
+  label(ctx, 'ᛟ', g.x + g.w / 2, g.y + 16, '#9a8f64', 14);
+}
+
+/** A translucent crystal veil; wind shatters it. */
+function crystal(ctx: Ctx, g: Box, time: number): void {
+  ctx.save();
+  ctx.globalAlpha = 0.55 + Math.sin(time * 2) * 0.1;
+  ctx.fillStyle = '#8fd0e0';
+  ctx.fillRect(g.x, g.y, g.w, g.h);
+  ctx.globalAlpha = 0.9;
+  for (let i = 0; i * 16 < g.h; i++) {
+    ctx.fillStyle = i % 2 ? '#d7f4fb' : '#6fb4c9';
+    ctx.beginPath();
+    ctx.moveTo(g.x - 4, g.y + i * 16 + 16);
+    ctx.lineTo(g.x + g.w / 2, g.y + i * 16);
+    ctx.lineTo(g.x + g.w + 4, g.y + i * 16 + 16);
+    ctx.fill();
+  }
+  ctx.restore();
+}
+
+export function drawGate(ctx: Ctx, g: Box, style: string, time: number): void {
+  if (style === 'stone') stone(ctx, g);
+  else if (style === 'crystal') crystal(ctx, g, time);
+  else thorns(ctx, g);
 }
 
 const NAMES: Record<string, string> = { Shrine: 'SANTUARIO', Page: 'PÁGINA PERDIDA', Clue: 'MURAL' };
@@ -92,7 +138,7 @@ export function drawProps(ctx: Ctx, game: Game, interactKey: string): void {
     const x = e.ax;
     const y = e.ay;
     if (e.type === 'Gate') {
-      if (game.closedGates().some((g) => g.id === fieldText(e, 'gateId'))) drawGate(ctx, e);
+      if (game.closedGates().some((g) => g.id === fieldText(e, 'gateId'))) drawGate(ctx, e, fieldText(e, 'style'), time);
       continue;
     }
     if (!game.isAvailable(e) || !['Shrine', 'Item', 'Ability', 'Page', 'Clue'].includes(e.type)) continue;

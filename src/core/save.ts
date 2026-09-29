@@ -2,7 +2,7 @@ import { STORAGE } from '../config.ts';
 import type { CipherKey } from '../magic/ciphers.ts';
 import { newProgress, type Checkpoint, type PageState, type Progress } from '../game/progress.ts';
 
-export const SAVE_VERSION = 2;
+export const SAVE_VERSION = 3;
 
 export interface SaveDataV2 {
   version: 2;
@@ -16,6 +16,17 @@ export interface SaveDataV2 {
   defeated: string[];
   checkpoint: Checkpoint;
 }
+
+/** v3 adds the spell loadout, spell levels and mana shards. */
+export interface SaveDataV3 extends Omit<SaveDataV2, 'version'> {
+  version: 3;
+  loadout: string[];
+  spellLevels: Record<string, number>;
+  shards: number;
+}
+
+/** Bosses beaten before seals existed still earn theirs. */
+const LEGACY_SEALS: Record<string, string> = { 'boss:groth': 'sello_bosque' };
 
 /** What the loader needs to know about the current content to validate a save. */
 export interface SaveContext {
@@ -64,12 +75,30 @@ function sanitizeKey(value: unknown): CipherKey | undefined {
   return key;
 }
 
+/** Before loadouts, every learned spell was castable: equip them in order. */
+export function migrateV2(d: SaveDataV2): SaveDataV3 {
+  const spells = strings(d.spells);
+  const flags = strings(d.flags);
+  const seals = flags.map((f) => LEGACY_SEALS[f]).filter((s): s is string => !!s);
+  return {
+    ...d,
+    version: 3,
+    items: [...new Set([...strings(d.items), ...seals])],
+    loadout: spells.slice(0, 2 + seals.length),
+    spellLevels: {},
+    shards: 0,
+  };
+}
+
 /** Validates any known save version and returns in-memory progress, or null. */
 export function deserialize(raw: unknown, ctx: SaveContext): Progress | null {
   if (!isRecord(raw)) return null;
-  let data: SaveDataV2 | null;
-  if (raw.version === 1) data = migrateV1(raw, ctx);
-  else if (raw.version === SAVE_VERSION) data = raw as unknown as SaveDataV2;
+  let data: SaveDataV3 | null;
+  if (raw.version === 1) {
+    const v2 = migrateV1(raw, ctx);
+    data = v2 && migrateV2(v2);
+  } else if (raw.version === 2) data = migrateV2(raw as unknown as SaveDataV2);
+  else if (raw.version === SAVE_VERSION) data = raw as unknown as SaveDataV3;
   else return null;
   if (!data) return null;
   const cp = isRecord(data.checkpoint) ? data.checkpoint : null;
@@ -86,12 +115,19 @@ export function deserialize(raw: unknown, ctx: SaveContext): Progress | null {
   if (isRecord(data.pages))
     for (const [id, state] of Object.entries(data.pages))
       if (isRecord(state)) progress.pages.set(id, { solved: state.solved === true, key: sanitizeKey(state.key) });
+  progress.loadout = (Array.isArray(data.loadout) ? data.loadout : []).map((id) => (typeof id === 'string' && progress.spells.has(id) ? id : ''));
+  if (isRecord(data.spellLevels))
+    for (const [id, level] of Object.entries(data.spellLevels)) if (Number.isInteger(level) && (level as number) > 0) progress.spellLevels.set(id, level as number);
+  progress.shards = Number.isInteger(data.shards) && data.shards > 0 ? data.shards : 0;
   return progress;
 }
 
-export function serialize(p: Progress): SaveDataV2 {
+export function serialize(p: Progress): SaveDataV3 {
   return {
     version: SAVE_VERSION,
+    loadout: [...p.loadout],
+    spellLevels: Object.fromEntries(p.spellLevels),
+    shards: p.shards,
     abilities: [...p.abilities],
     spells: [...p.spells],
     items: [...p.items],

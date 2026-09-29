@@ -5,6 +5,8 @@
     "w": 52,
     "h": 72,
     "hp": 32,
+    "shards": 25,
+    "reward": "sello_bosque",
     "enrageAt": 0.5,
     "pattern": ["slash", "leap", "charge"],
     "moves": {
@@ -22,7 +24,35 @@
     "victory": {
       "eyebrow": "CAPÍTULO I · COMPLETADO",
       "title": "El bosque vuelve a respirar",
-      "text": "La corona cayó. La primera página volvió a hablar.<br>Pero el grimorio todavía guarda muchos silencios.<br><br>Obtuviste el sello del bosque.<br>La historia continuará en el siguiente capítulo."
+      "text": "La corona cayó y, entre sus restos, brilla un sello tallado con los mismos signos del grimorio. Al tocarlo, sentís lugar para una magia más.<br><br>Bajo el trono, la piedra se quebró: el camino de vuelta sigue hacia abajo, hacia las cavernas."
+    }
+  },
+  "vharn": {
+    "name": "VHARN, EL CENTINELA DE CUARZO",
+    "look": "golem",
+    "w": 60,
+    "h": 76,
+    "hp": 44,
+    "shards": 40,
+    "reward": "sello_caverna",
+    "enrageAt": 0.5,
+    "pattern": ["leap", "rain", "charge", "rain"],
+    "moves": {
+      "leap": { "windup": 1.0, "windupEnraged": 0.75, "duration": 1.3, "recover": 1.1, "recoverEnraged": 0.7, "jump": 520, "wave": 240, "waveEnraged": 320 },
+      "rain": { "windup": 0.8, "windupEnraged": 0.6, "duration": 1.0, "recover": 1.0, "recoverEnraged": 0.7, "count": 5, "speed": 300, "speedEnraged": 380 },
+      "charge": { "windup": 0.9, "windupEnraged": 0.7, "duration": 0.8, "recover": 1.2, "recoverEnraged": 0.8, "speed": 330, "speedEnraged": 430 }
+    },
+    "summonTime": 1.2,
+    "summon": [
+      { "x": 8, "y": 9, "kind": "bat" },
+      { "x": 31, "y": 9, "kind": "bat" },
+      { "x": 3, "y": 19, "kind": "crawler" },
+      { "x": 36, "y": 19, "kind": "crawler" }
+    ],
+    "victory": {
+      "eyebrow": "CAPÍTULO II · COMPLETADO",
+      "title": "El eco se apaga",
+      "text": "El centinela se deshace en polvo de cuarzo. Obtuviste el sello de la caverna.<br><br>Dos sellos del círculo ya son tuyos. Más allá de las cavernas, una escalera sube hacia la Torre Gris, donde Iulin Saerh espera.<br><br>La historia continuará en el siguiente capítulo."
     }
   }
 }

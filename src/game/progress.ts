@@ -25,6 +25,12 @@ export interface Progress {
   visited: Set<string>;
   defeated: Set<string>;
   checkpoint: Checkpoint;
+  /** Equipped spell per slot, '' for an empty slot. Slots beyond this array are empty. */
+  loadout: string[];
+  /** Level of each learned spell (1 when absent). */
+  spellLevels: Map<string, number>;
+  /** Mana shards: currency for upgrading and fusing spells at shrines. */
+  shards: number;
 }
 
 export function newProgress(checkpoint: Checkpoint): Progress {
@@ -38,6 +44,9 @@ export function newProgress(checkpoint: Checkpoint): Progress {
     visited: new Set(),
     defeated: new Set(),
     checkpoint: { ...checkpoint },
+    loadout: [],
+    spellLevels: new Map(),
+    shards: 0,
   };
 }
 

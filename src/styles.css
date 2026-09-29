@@ -95,6 +95,19 @@ small {
   letter-spacing: 3px;
 }
 
+#spells {
+  margin-top: 4px;
+  font-size: 8px;
+  letter-spacing: 1.5px;
+  color: #cfd8b7;
+}
+
+#shards {
+  margin-top: 3px;
+  font-size: 10px;
+  color: #9fe3ff;
+}
+
 .location {
   text-align: center;
 }
@@ -387,52 +400,123 @@ small {
   text-transform: uppercase;
 }
 
-/* Research screen: known signatures and mural words, next to the cipher. */
-.panel.cipher-panel {
-  width: min(940px, 97%);
-  max-width: 940px;
+/* Shrine: equip, upgrade and fuse spells. ------------------------------- */
+
+.panel.shrine-panel {
+  width: min(720px, 96%);
+  max-width: 720px;
 }
 
-.cipher-layout {
-  display: grid;
-  grid-template-columns: 1fr;
-  gap: 20px;
-  text-align: center;
+.shrine-status {
+  font-size: 11px !important;
 }
 
-.cipher-layout.with-aside {
-  grid-template-columns: 1fr 230px;
-  align-items: start;
+.shrine-status strong {
+  color: #9fe3ff;
 }
 
-.cipher-aside {
-  padding: 14px 16px;
-  background: #0b2219;
-  border: 1px solid #4e5f40;
-  color: var(--muted);
-  font-size: 11px;
-  line-height: 1.6;
-  text-align: left;
+.slots {
+  display: flex;
+  justify-content: center;
+  gap: 8px;
+  margin: 10px 0 14px;
 }
 
-.cipher-aside section + section {
-  margin-top: 14px;
+.slot {
+  min-width: 120px;
+  padding: 8px 10px;
+  border: 1px solid #cfbd82;
+  background: #16301f;
 }
 
-.cipher-aside h3 {
-  margin: 0 0 6px;
-  font-size: 9px;
-  letter-spacing: 2px;
+.slot.empty {
+  border-style: dashed;
+  border-color: #758859;
+  background: transparent;
+}
+
+.slot small {
   color: #cfbb81;
 }
 
-.cipher-aside ul {
-  margin: 0;
-  padding-left: 16px;
+.slot strong {
+  display: block;
+  margin-top: 4px;
+  font: 13px Cinzel, serif;
+  color: #e9e2be;
 }
 
-.cipher-aside li {
-  margin: 3px 0;
+.slot.empty strong {
+  color: #7f8d70;
+}
+
+.spell-list {
+  display: grid;
+  gap: 6px;
+  text-align: left;
+}
+
+.spell-list .list-title {
+  margin-top: 8px;
+  color: #cfbb81;
+}
+
+.spell-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 8px 12px;
+  border: 1px solid #4e5f40;
+  background: #0b2219;
+}
+
+.spell-row.equipped {
+  border-color: #cfbd82;
+}
+
+.spell-row.fusion {
+  border-color: #a4652f;
+  background: #1d1a12;
+}
+
+.spell-row strong {
+  font: 14px Cinzel, serif;
+  color: #e9e2be;
+}
+
+.spell-row .dots {
+  margin-left: 6px;
+  color: #9fe3ff;
+  letter-spacing: 2px;
+}
+
+.spell-row small {
+  margin-top: 3px;
+  font-size: 10px;
+  letter-spacing: 0.5px;
+  color: var(--muted);
+}
+
+.spell-row .actions {
+  display: flex;
+  flex-shrink: 0;
+}
+
+.spell-row .actions button {
+  margin: 0 0 0 6px;
+  padding: 8px 10px;
+  font-size: 9px;
+}
+
+button:disabled {
+  opacity: 0.45;
+  cursor: default;
+}
+
+.panel.prologue-panel p {
+  font: italic 15px/1.8 Georgia, serif;
+  color: #d8dcc4;
 }
 
 /* Grimoire: an open leather book; torn stubs mark missing pages. -------- */

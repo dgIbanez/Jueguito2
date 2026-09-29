@@ -12,7 +12,8 @@ export interface Intent {
   attackPressed: boolean;
   dashPressed: boolean;
   interactPressed: boolean;
-  castSlot: 0 | 1 | 2;
+  /** Spell slot pressed this step (1-based), 0 for none. */
+  castSlot: number;
 }
 
 export const idleIntent = (): Intent => ({
@@ -48,6 +49,10 @@ export interface Player extends Body {
   wallLock: number;
   magicCool: number;
   shield: number;
+  /** Damage per burn while the shield is fiery (0 for none). */
+  shieldBurn: number;
+  /** Damage of arrows the shield sends back. */
+  reflectDamage: number;
   /** Last solid footing, where hazards send the player back. */
   safe: { x: number; y: number };
 }
@@ -65,7 +70,7 @@ export function createPlayer(x: number, y: number): Player {
     x, y, w: PLAYER.w, h: PLAYER.h, vx: 0, vy: 0, ground: false, groundTile: Tile.Empty, hitWall: 0, dropTimer: 0,
     face: 1, hp: PLAYER.maxHp, mana: PLAYER.maxMana, inv: 0, attack: 0, attackDown: false, cool: 0,
     dash: 0, dashCool: 0, airDash: true, airJumps: 0, coyote: 0, jumpBuffer: 0, jumping: false,
-    sliding: false, wallDir: 0, wallCoyote: 0, wallLock: 0, magicCool: 0, shield: 0, safe: { x, y },
+    sliding: false, wallDir: 0, wallCoyote: 0, wallLock: 0, magicCool: 0, shield: 0, shieldBurn: 0, reflectDamage: 1, safe: { x, y },
   };
 }
 

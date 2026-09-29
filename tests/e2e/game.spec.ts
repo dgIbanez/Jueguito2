@@ -18,8 +18,11 @@ test.afterEach(() => {
   expect(errors).toEqual([]);
 });
 
+/** Starts a new journey and skips the prologue. */
 async function startGame(page: Page) {
   await page.locator('#start').focus();
+  await page.keyboard.press('Enter');
+  await expect(page.locator('#begin')).toBeFocused();
   await page.keyboard.press('Enter');
   await expect.poll(() => state(page, 'game.mode')).toBe('play');
 }
@@ -106,7 +109,8 @@ test('grimoire research teaches Ascua', async ({ page }) => {
   await expect(page.locator('.signature')).toHaveText('— IULIN SAERH');
   await page.screenshot({ path: 'test-results/screens/cipher-caesar.png' });
   await page.locator('#solve').click();
-  await expect(page.locator('#toast')).toContainText('ASCUA DESBLOQUEADA · K');
+  await expect(page.locator('#toast')).toContainText('ASCUA DESBLOQUEADA');
+  await expect(page.locator('#toast')).toContainText('K para lanzarla');
   expect(await state(page, 'game.mode')).toBe('play');
 
   await page.keyboard.press('Tab');
@@ -138,34 +142,34 @@ test('rune page: murals fill in glyphs and the player deduces the rest', async (
   await expect(page.locator('#toast')).toContainText('ÉGIDA DE RUNAS');
 });
 
-test('research sidebar shows earned murals only, never another page\'s signature', async ({ page }) => {
+test('the grimoire only lists pages already found', async ({ page }) => {
+  await startGame(page);
+  await page.evaluate(() => (window as any).runas.game.progress.items.add('grimoire'));
+  await page.keyboard.press('Tab');
+  await expect(page.locator('.page-link')).toHaveCount(0);
+  await expect(page.locator('.grimoire')).not.toContainText('III');
+  await page.keyboard.press('Escape');
+
+  await page.evaluate(() => (window as any).runas.game.progress.pages.set('page_ascua', { solved: false }));
+  await page.keyboard.press('Tab');
+  await expect(page.locator('.page-link')).toHaveCount(1);
+  await expect(page.locator('.page-link')).toHaveText('II · Página ilegible');
+  await expect(page.locator('.grimoire')).not.toContainText('Hoja arrancada');
+  await page.screenshot({ path: 'test-results/screens/grimoire-one-page.png' });
+});
+
+test('the rune research screen has no sidebar', async ({ page }) => {
   await startGame(page);
   await page.evaluate(() => {
     const { game } = (window as any).runas;
     game.progress.items.add('grimoire');
-    game.progress.pages.set('page_ascua', { solved: false });
     game.progress.pages.set('page_egida', { solved: false });
+    game.progress.clues.add('mural_runa');
   });
-
-  // The Caesar page never gets a rune sidebar.
   await page.keyboard.press('Tab');
-  await page.locator('.page-link[data-page="page_ascua"]').click();
   await page.locator('#research').click();
+  await expect(page.locator('.rune-grid')).toBeVisible();
   await expect(page.locator('.cipher-aside')).toHaveCount(0);
-  for (let i = 0; i < 3; i++) await page.locator('#plus').click();
-  await expect(page.locator('.signature')).toHaveText('— IULIN SAERH');
-  await page.locator('#solve').click();
-
-  // Deciphering the rune page shows murals already read, but not Ascua's signature:
-  // comparing signatures is left to the player's own memory, not auto-solved.
-  await page.evaluate(() => (window as any).runas.game.progress.clues.add('mural_runa'));
-  await page.keyboard.press('Tab');
-  await page.locator('.page-link[data-page="page_egida"]').click();
-  await page.locator('#research').click();
-  await expect(page.locator('.cipher-aside')).toBeVisible();
-  await expect(page.locator('.cipher-aside')).toContainText('RUNA');
-  await expect(page.locator('.cipher-aside')).not.toContainText('IULIN SAERH');
-  await page.screenshot({ path: 'test-results/screens/cipher-aside.png' });
 });
 
 test('a solved page keeps its discovery note and signature in the grimoire', async ({ page }) => {
@@ -203,7 +207,7 @@ test('boss fight renders with the health bar', async ({ page }) => {
   await startGame(page);
   await page.evaluate(() => {
     const { game } = (window as any).runas;
-    game.progress.spells.add('ascua');
+    game.learnSpell('ascua');
     game.enterRoom('Trono', 60, 448);
     game.player.face = 1;
   });
@@ -228,4 +232,74 @@ test('every room renders', async ({ page }) => {
     await page.waitForTimeout(350);
     await page.screenshot({ path: `test-results/screens/room-${id}.png` });
   }
+});
+
+test('a new journey opens with the summoning prologue', async ({ page }) => {
+  await page.locator('#start').focus();
+  await page.keyboard.press('Enter');
+  await expect(page.locator('#overlay')).toContainText('Del otro lado del círculo');
+  await page.screenshot({ path: 'test-results/screens/prologue.png' });
+  await page.keyboard.press('Enter');
+  await expect.poll(() => state(page, 'game.mode')).toBe('play');
+  // Continuing an existing journey skips it.
+  await page.reload();
+  await page.locator('#start').focus();
+  await page.keyboard.press('Enter');
+  await expect.poll(() => state(page, 'game.mode')).toBe('play');
+});
+
+test('resting at a shrine prepares, upgrades and fuses spells', async ({ page }) => {
+  await startGame(page);
+  await page.evaluate(() => {
+    const { game } = (window as any).runas;
+    for (const id of ['ascua', 'egida', 'cefiro']) game.learnSpell(id);
+    game.progress.shards = 60;
+    game.enterRoom('Umbral', 99, 448);
+    game.enemies = [];
+  });
+  await page.keyboard.press('KeyE');
+  await expect(page.locator('.shrine-panel')).toBeVisible();
+  await expect(page.locator('.slot')).toHaveCount(2);
+  await expect(page.locator('[data-equip="cefiro"]')).toBeDisabled();
+
+  await page.locator('[data-unequip="egida"]').click();
+  await page.locator('[data-equip="cefiro"]').click();
+  await expect(page.locator('.slot').nth(1)).toContainText('Céfiro');
+
+  await page.locator('[data-upgrade="ascua"]').click();
+  await page.locator('[data-upgrade="cefiro"]').click();
+  await expect(page.locator('[data-fuse="torbellino"]')).toBeEnabled();
+  await page.screenshot({ path: 'test-results/screens/shrine.png' });
+  await page.locator('[data-fuse="torbellino"]').click();
+  await expect(page.locator('.shrine-panel')).toContainText('Torbellino ígneo');
+
+  await page.locator('#back').click();
+  expect(await state(page, 'game.mode')).toBe('play');
+  await expect(page.locator('#spells')).toContainText('K ASCUA');
+  await expect(page.locator('#spells')).toContainText('L CÉFIRO');
+});
+
+test('chapter II: the caverns and Vharn render', async ({ page }) => {
+  await startGame(page);
+  await page.evaluate(() => {
+    const { game } = (window as any).runas;
+    game.progress.flags.add('boss:groth');
+    game.progress.spells.add('escarcha');
+    game.progress.loadout = ['escarcha'];
+    game.enterRoom('Cavernas', 900, 472);
+    game.player.inv = 99;
+  });
+  await page.waitForTimeout(700);
+  await page.screenshot({ path: 'test-results/screens/cavernas.png' });
+  await page.evaluate(() => {
+    const { game } = (window as any).runas;
+    game.enterRoom('Corazon', 200, 448);
+    game.player.inv = 99;
+    const vharn = game.enemies.find((e: any) => e.boss);
+    vharn.boss.move = 'rain';
+    Object.assign(vharn, { state: 'wind', timer: 0 });
+  });
+  await expect(page.locator('#boss-name')).toHaveText('VHARN, EL CENTINELA DE CUARZO');
+  await page.waitForTimeout(350);
+  await page.screenshot({ path: 'test-results/screens/vharn.png' });
 });

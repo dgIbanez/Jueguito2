@@ -19,6 +19,7 @@ const content = {
   pages: read('pages.json'),
   clues: read('clues.json'),
   scripts: read('scripts.json'),
+  story: read('story.json'),
 } as Content;
 
 const { errors, warnings } = validateWorld(content);

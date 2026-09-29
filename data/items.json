@@ -6,5 +6,15 @@
   "grimoire": {
     "name": "Grimorio antiguo",
     "pickup": "GRIMORIO ANTIGUO · Buscá las páginas perdidas. {grimoire} para consultarlo."
+  },
+  "sello_bosque": {
+    "name": "Sello del bosque",
+    "pickup": "SELLO DEL BOSQUE · Una ranura de magia más. Prepará tus magias en un santuario.",
+    "spellSlot": true
+  },
+  "sello_caverna": {
+    "name": "Sello de la caverna",
+    "pickup": "SELLO DE LA CAVERNA · Una ranura de magia más. Prepará tus magias en un santuario.",
+    "spellSlot": true
   }
 }

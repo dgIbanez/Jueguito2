@@ -1,23 +1,84 @@
 {
   "ascua": {
     "name": "Ascua",
-    "slot": 1,
     "cost": 1,
-    "effect": "projectile",
-    "damage": 2,
-    "speed": 430,
-    "unlock": "ASCUA DESBLOQUEADA · {spell1} para lanzar fuego. Las llamas abren caminos entre las zarzas.",
-    "description": "Concentra una chispa de magia antigua y la lanza hacia delante. Quema a tus enemigos y las zarzas que cierran el paso.",
-    "stats": [["Coste", "1 carga de magia"], ["Impacto", "2 puntos de daño"]]
+    "effect": "fire",
+    "upgrade": [8, 20],
+    "levels": [
+      { "damage": 2, "speed": 430, "summary": "Una chispa que quema a 2 de daño." },
+      { "damage": 3, "speed": 480, "summary": "La llama crece: 3 de daño y más velocidad." },
+      { "damage": 3, "speed": 520, "pierce": true, "summary": "Atraviesa a todos los enemigos de su camino." }
+    ],
+    "unlock": "ASCUA DESBLOQUEADA · Las llamas abren caminos entre las zarzas.",
+    "description": "Concentra una chispa de magia antigua y la lanza hacia delante. Quema a tus enemigos y las zarzas que cierran el paso."
   },
   "egida": {
     "name": "Égida de runas",
-    "slot": 2,
     "cost": 1,
     "effect": "shield",
-    "duration": 0.7,
-    "unlock": "ÉGIDA DE RUNAS · {spell2} para rodearte de signos. Devuelve las flechas y detiene las ondas.",
-    "description": "Un círculo de signos te envuelve por un instante. Nada te toca, y las flechas vuelven hacia quien las disparó.",
-    "stats": [["Coste", "1 carga de magia"], ["Duración", "0,7 segundos"]]
+    "upgrade": [8, 20],
+    "levels": [
+      { "duration": 0.7, "reflectDamage": 1, "summary": "Te protege 0,7 segundos y devuelve las flechas." },
+      { "duration": 1.0, "reflectDamage": 1, "summary": "El círculo dura 1 segundo." },
+      { "duration": 1.3, "reflectDamage": 2, "summary": "Dura 1,3 segundos y las flechas devueltas hieren el doble." }
+    ],
+    "unlock": "ÉGIDA DE RUNAS · Devuelve las flechas y detiene las ondas.",
+    "description": "Un círculo de signos te envuelve por un instante. Nada te toca, y las flechas vuelven hacia quien las disparó."
+  },
+  "cefiro": {
+    "name": "Céfiro",
+    "cost": 1,
+    "effect": "gust",
+    "upgrade": [10, 24],
+    "levels": [
+      { "reach": 90, "damage": 1, "push": 380, "summary": "Una ráfaga corta que empuja y deshace flechas." },
+      { "reach": 120, "damage": 1, "push": 460, "reflect": true, "summary": "Más alcance, y las flechas vuelven contra sus dueños." },
+      { "reach": 150, "damage": 2, "push": 520, "reflect": true, "summary": "Ráfaga amplia de 2 de daño." }
+    ],
+    "unlock": "CÉFIRO · Una ráfaga que aparta enemigos y quiebra el cristal.",
+    "description": "El aire obedece a la palabra escrita: una ráfaga delante de vos que empuja enemigos, desvía flechas y quiebra velos de cristal."
+  },
+  "escarcha": {
+    "name": "Escarcha",
+    "cost": 1,
+    "effect": "frost",
+    "upgrade": [10, 24],
+    "levels": [
+      { "damage": 1, "speed": 380, "freeze": 1.5, "summary": "Congela 1,5 segundos a quien toca." },
+      { "damage": 1, "speed": 400, "freeze": 2.2, "summary": "El hielo dura 2,2 segundos." },
+      { "damage": 2, "speed": 420, "freeze": 2.8, "pierce": true, "summary": "Atraviesa y congela 2,8 segundos." }
+    ],
+    "unlock": "ESCARCHA · Congela por unos instantes a quien alcanza.",
+    "description": "Una esquirla de frío que detiene lo que avanza. Los enemigos congelados no atacan ni se mueven; los jefes resisten mejor."
+  },
+  "torbellino": {
+    "name": "Torbellino ígneo",
+    "cost": 2,
+    "effect": "vortex",
+    "fusion": ["ascua", "cefiro"],
+    "fuseCost": 15,
+    "levels": [{ "damage": 1, "speed": 160, "life": 1.6, "rehit": 0.25, "summary": "Un remolino de fuego lento que quema una y otra vez." }],
+    "unlock": "TORBELLINO ÍGNEO · El viento aviva la llama.",
+    "description": "Fusión de Ascua y Céfiro: un remolino de fuego avanza despacio y golpea repetidamente a todo lo que atraviesa."
+  },
+  "egida_ignea": {
+    "name": "Égida ígnea",
+    "cost": 2,
+    "effect": "shield",
+    "fusion": ["ascua", "egida"],
+    "fuseCost": 15,
+    "levels": [{ "duration": 1.2, "reflectDamage": 2, "burn": 1, "summary": "Un círculo ardiente que protege y quema a quien lo toca." }],
+    "unlock": "ÉGIDA ÍGNEA · Los signos arden a tu alrededor.",
+    "description": "Fusión de Ascua y Égida: el círculo de signos se enciende. Protege, devuelve flechas y quema a los enemigos que se acercan."
+  },
+  "ventisca": {
+    "name": "Ventisca",
+    "cost": 2,
+    "effect": "gust",
+    "fusion": ["cefiro", "escarcha"],
+    "fuseCost": 15,
+    "levels": [{ "reach": 170, "damage": 1, "push": 0, "freeze": 2.5, "reflect": true, "summary": "Una ráfaga helada que congela todo lo que alcanza." }],
+    "unlock": "VENTISCA · El viento trae el invierno.",
+    "description": "Fusión de Céfiro y Escarcha: una ráfaga amplia que congela a todos los enemigos que toca y deshace sus proyectiles."
   }
 }

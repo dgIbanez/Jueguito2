@@ -61,19 +61,19 @@ export function drawHero(ctx: Ctx, p: Player, time: number): void {
     ctx.arc(x + p.w / 2, y + p.h - 6, 30, 0.2 + t * 0.6, Math.PI - 0.2 - (1 - t) * 0.6);
     ctx.stroke();
   }
-  if (p.shield > 0) drawShield(ctx, x + p.w / 2, y + p.h / 2, p.shield, time);
+  if (p.shield > 0) drawShield(ctx, x + p.w / 2, y + p.h / 2, p.shield, time, p.shieldBurn > 0);
 }
 
 /** Égida: a turning ring of runes around the player. */
-function drawShield(ctx: Ctx, cx: number, cy: number, left: number, time: number): void {
+function drawShield(ctx: Ctx, cx: number, cy: number, left: number, time: number, fiery: boolean): void {
   ctx.save();
   ctx.globalAlpha = Math.min(1, left * 3) * 0.85;
-  ctx.strokeStyle = '#b9d7ff';
+  ctx.strokeStyle = fiery ? '#f2a35a' : '#b9d7ff';
   ctx.lineWidth = 2;
   ctx.beginPath();
   ctx.arc(cx, cy, 30, 0, Math.PI * 2);
   ctx.stroke();
-  ctx.fillStyle = '#dcecff';
+  ctx.fillStyle = fiery ? '#ffd9a0' : '#dcecff';
   ctx.font = `12px ${RUNE_FONT}`;
   ctx.textAlign = 'center';
   const runes = 'ᛖᛈᚾᛚᛏᛜ';
@@ -140,7 +140,121 @@ function bossPose(ctx: Ctx, a: Enemy, time: number): void {
 
 const BOSS_ARM: Record<string, number> = { slash: -2.1, leap: -0.5, charge: 0.35 };
 
+/** Crystal bat: flapping wings, eyes flare during the windup. */
+function drawBat(ctx: Ctx, a: Enemy, time: number): void {
+  const cx = a.x + a.w / 2;
+  const cy = a.y + a.h / 2 + (a.state === 'wind' ? Math.sin(time * 60) * 1.5 : 0);
+  const flap = Math.sin(time * (a.state === 'strike' ? 30 : 18)) * 7;
+  const body = a.hit > 0 ? '#fff0ca' : '#5d5470';
+  ctx.fillStyle = a.hit > 0 ? '#fff0ca' : '#433c55';
+  for (const side of [-1, 1]) {
+    ctx.beginPath();
+    ctx.moveTo(cx + side * 4, cy - 2);
+    ctx.lineTo(cx + side * 16, cy - 6 - flap);
+    ctx.lineTo(cx + side * 13, cy + 2);
+    ctx.lineTo(cx + side * 8, cy + 1);
+    ctx.fill();
+  }
+  rect(ctx, cx - 5, cy - 5, 10, 10, body);
+  rect(ctx, cx - 4, cy - 8, 3, 4, body);
+  rect(ctx, cx + 1, cy - 8, 3, 4, body);
+  const eye = a.state === 'wind' ? '#ffffff' : '#9fe3ff';
+  rect(ctx, cx - 3, cy - 3, 2, 2, eye);
+  rect(ctx, cx + 1, cy - 3, 2, 2, eye);
+  rect(ctx, cx - 2, cy + 5, 4, 3, '#8fd0e0');
+}
+
+/** Crystal crawler: a low beetle with a spiny back. */
+function drawCrawler(ctx: Ctx, a: Enemy, time: number): void {
+  const moving = Math.abs(a.vx) > 5;
+  const step = moving ? Math.sin(time * 20) * 2 : 0;
+  ctx.save();
+  ctx.translate(a.x + a.w / 2, a.y + a.h);
+  ctx.scale(a.face, 1);
+  if (a.state === 'wind') ctx.rotate(-0.12);
+  else if (a.state === 'strike') ctx.translate(4, 0);
+  const shell = a.hit > 0 ? '#fff0ca' : '#3e4868';
+  for (let i = 0; i < 3; i++) {
+    rect(ctx, -12 + i * 9, -5 + (i % 2 ? step : -step), 3, 5, '#2a3048');
+  }
+  rect(ctx, -16, -16, 30, 11, shell);
+  rect(ctx, 10, -13, 7, 7, a.hit > 0 ? '#fff0ca' : '#56628a');
+  rect(ctx, 14, -11, 2, 2, a.state === 'wind' ? '#ffffff' : '#9fe3ff');
+  ctx.fillStyle = '#8fd0e0';
+  for (let i = 0; i < 4; i++) {
+    ctx.beginPath();
+    ctx.moveTo(-14 + i * 7, -16);
+    ctx.lineTo(-11 + i * 7, -24 - (i % 2) * 4);
+    ctx.lineTo(-8 + i * 7, -16);
+    ctx.fill();
+  }
+  ctx.restore();
+}
+
+/** Vharn: a quartz golem with a pulsing core. */
+function drawGolem(ctx: Ctx, a: Enemy, time: number): void {
+  const t = a.state === 'wind' ? 1 - Math.max(0, a.timer) / windupLength(a) : 0;
+  const move = a.boss?.move;
+  ctx.save();
+  ctx.translate(a.x + a.w / 2, a.y + a.h);
+  ctx.scale(a.face, 1);
+  if (a.state === 'wind' && move === 'leap') ctx.scale(1 + 0.08 * t, 1 - 0.15 * t);
+  if (a.state === 'wind' && move === 'charge') ctx.transform(1, 0, 0.2 * t, 1, 0, 0);
+  if (a.state === 'summon') ctx.translate(Math.sin(time * 30) * 2, 0);
+  const stone = a.hit > 0 ? '#fff0ca' : '#4a5068';
+  const dark = a.hit > 0 ? '#f0dcb0' : '#343a50';
+  rect(ctx, -18, -26, 12, 26, dark);
+  rect(ctx, 6, -26, 12, 26, dark);
+  rect(ctx, -26, -66, 52, 42, stone);
+  rect(ctx, -16, -82, 32, 18, stone);
+  rect(ctx, -8, -76, 16, 4, '#9fe3ff');
+  const pulse = 0.6 + Math.sin(time * 4) * 0.3;
+  ctx.globalAlpha = pulse;
+  rect(ctx, -8, -52, 16, 16, '#bfe6ff');
+  ctx.globalAlpha = 1;
+  const raise = a.state === 'summon' || (a.state !== 'idle' && move === 'rain') ? -30 : a.state === 'wind' && move === 'leap' ? -12 * t : 0;
+  rect(ctx, -38, -62 + raise, 12, 34, dark);
+  rect(ctx, 26, -62 + raise, 12, 34, dark);
+  ctx.fillStyle = '#8fd0e0';
+  for (const [x, h] of [[-24, 20], [-14, 28], [14, 24], [22, 16]]) {
+    ctx.beginPath();
+    ctx.moveTo(x - 5, -64);
+    ctx.lineTo(x, -64 - h);
+    ctx.lineTo(x + 5, -64);
+    ctx.fill();
+  }
+  ctx.restore();
+}
+
+/** A translucent block of ice over frozen enemies. */
+function drawIce(ctx: Ctx, a: Enemy): void {
+  ctx.save();
+  ctx.globalAlpha = 0.45;
+  ctx.fillStyle = '#bfe6ff';
+  ctx.fillRect(a.x - 3, a.y - 3, a.w + 6, a.h + 6);
+  ctx.globalAlpha = 0.9;
+  rect(ctx, a.x - 3, a.y - 3, a.w + 6, 2, '#eaf8ff');
+  rect(ctx, a.x + 3, a.y + 2, 2, a.h - 6, '#eaf8ff');
+  ctx.restore();
+}
+
 export function drawEnemy(ctx: Ctx, a: Enemy, time: number): void {
+  if (a.look === 'bat' || a.look === 'crawler' || a.look === 'golem') {
+    if (a.look === 'bat') drawBat(ctx, a, time);
+    else if (a.look === 'crawler') drawCrawler(ctx, a, time);
+    else drawGolem(ctx, a, time);
+    if (a.frozen > 0) drawIce(ctx, a);
+    if (!a.boss && a.hp < a.max && a.hp > 0) {
+      rect(ctx, a.x, a.y - 7, a.w, 3, '#182a22');
+      rect(ctx, a.x, a.y - 7, (a.w * a.hp) / a.max, 3, '#b9bb7c');
+    }
+    return;
+  }
+  drawGoblinFamily(ctx, a, time);
+  if (a.frozen > 0) drawIce(ctx, a);
+}
+
+function drawGoblinFamily(ctx: Ctx, a: Enemy, time: number): void {
   const x = Math.round(a.x);
   const y = Math.round(a.y);
   const boss = !!a.boss;
@@ -216,6 +330,17 @@ export function drawEnemy(ctx: Ctx, a: Enemy, time: number): void {
 }
 
 export function drawArrow(ctx: Ctx, a: Arrow): void {
+  if (a.shard) {
+    // Falling quartz: a sharp crystal pointing down.
+    ctx.fillStyle = '#8fd0e0';
+    ctx.beginPath();
+    ctx.moveTo(a.x, a.y);
+    ctx.lineTo(a.x + a.w, a.y);
+    ctx.lineTo(a.x + a.w / 2, a.y + a.h + 4);
+    ctx.fill();
+    rect(ctx, a.x + a.w / 2 - 1, a.y + 2, 2, a.h - 4, '#eaf8ff');
+    return;
+  }
   ctx.save();
   ctx.translate(a.x + 4, a.y + 3);
   ctx.rotate(Math.atan2(a.vy, a.vx));
