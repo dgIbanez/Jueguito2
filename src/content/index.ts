@@ -20,7 +20,7 @@ export function loadContent(): Content {
   return {
     world: parseWorld(JSON.parse(worldSource) as LdtkProject),
     enemies: enemies as Content['enemies'],
-    bosses: bosses as Content['bosses'],
+    bosses: bosses as unknown as Content['bosses'],
     abilities,
     items,
     spells: spells as unknown as Content['spells'],

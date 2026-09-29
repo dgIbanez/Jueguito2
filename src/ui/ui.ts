@@ -2,6 +2,7 @@ import type { AudioEngine } from '../audio/engine.ts';
 import { PLAYER, VIEW_W } from '../config.ts';
 import type { BossDef } from '../content/types.ts';
 import { ACTIONS, RESERVED, SPELL_ACTIONS, type Action, type Input } from '../core/input.ts';
+import { formatTime, loadRecords, recordTime } from '../core/records.ts';
 import type { KeyValueStorage } from '../core/save.ts';
 import { defaultBindings, saveSettings, type Settings } from '../core/settings.ts';
 import type { Game, Mode } from '../game/game.ts';
@@ -54,6 +55,7 @@ export class Ui {
     game.events.on('openPage', (id) => this.research(id, 'world'));
     game.events.on('readClue', (id) => this.clue(id));
     game.events.on('shrine', () => this.shrine());
+    game.events.on('trialCleared', ({ boss, done, time }) => this.trialCleared(boss, done, time));
   }
 
   // ------------------------------------------------------------ helpers
@@ -167,12 +169,13 @@ ${row('music', 'Música')}${row('sfx', 'Efectos')}</div>
     const saved = this.game.store.hasSave();
     this.panel(`<div class="eyebrow">UNA AVENTURA DE ESPADA Y CONOCIMIENTO</div><h1>RUNAS<br>ROTAS</h1><div class="subtitle">EL BOSQUE OLVIDADO</div><div class="ornament">─ ◇ ─</div>
 <p>Bajo las raíces duerme un lenguaje perdido.<br>Encontrá sus páginas. Despertá su magia.</p>
-<button class="primary" id="start">${saved ? 'CONTINUAR EL VIAJE' : 'ENTRAR AL BOSQUE'} →</button>${saved ? '<button class="secondary" id="new">NUEVA PARTIDA</button>' : ''}
+<button class="primary" id="start">${saved ? 'CONTINUAR EL VIAJE' : 'ENTRAR AL BOSQUE'} →</button>${saved ? '<button class="secondary" id="new">NUEVA PARTIDA</button>' : ''}${this.game.pantheonBosses().length ? '<button class="secondary" id="pantheon">PANTEÓN</button>' : ''}
 <div class="menu-options"><button class="secondary" id="help">CONTROLES</button><button class="secondary" id="audio">AUDIO</button><button class="secondary" id="fullscreen">F · PANTALLA COMPLETA</button></div>
 <p class="keys">↑ ↓ / TAB · ELEGIR &nbsp; ENTER · CONFIRMAR</p><p class="credits">CAPÍTULOS I–II · VERSIÓN 3.0 · SOLO TECLADO</p>`);
     this.bindOptions(() => this.title());
     this.on('#help', () => this.help());
     this.on('#start', () => this.start(false));
+    this.on('#pantheon', () => this.pantheon());
     this.on('#new', () => {
       this.panel('<h2>Un nuevo viaje</h2><p>Se reemplazará el progreso guardado de este navegador.</p><button id="confirm" class="primary">COMENZAR DE NUEVO</button><button id="back" class="secondary">VOLVER</button>');
       this.on('#confirm', () => this.start(true));
@@ -230,11 +233,12 @@ ${row('music', 'Música')}${row('sfx', 'Efectos')}</div>
     this.panel(`<div class="eyebrow">UN RESPIRO ENTRE LAS RAÍCES</div><h2>El bosque puede esperar</h2>
 <p>${k('left')} / ${k('right')} · Moverse &nbsp; ${k('jump')} · Saltar (mantener para más altura)<br>${k('attack')} · Espada &nbsp; ${k('down')} + ${k('attack')} en el aire · Golpe descendente<br>${k('down')} + ${k('jump')} · Bajar de una plataforma &nbsp; ${k('dash')} · Impulso<br>${SPELL_ACTIONS.map(k).join(' / ')} · Magias equipadas &nbsp; ${k('interact')} · Interactuar<br>${k('grimoire')} · Grimorio &nbsp; ${k('map')} · Mapa &nbsp; Esc · Pausa</p>
 <p>La espada restaura magia al acertar. El golpe descendente rebota sobre enemigos y zarzas. Los santuarios curan, guardan y permiten preparar, mejorar y fusionar tus magias.</p>
-<button class="primary" id="back">VOLVER</button><div class="menu-options"><button class="secondary" id="controls">REASIGNAR TECLAS</button><button class="secondary" id="audio">AUDIO</button><button class="secondary" id="fullscreen">F · PANTALLA COMPLETA</button></div>`);
+<button class="primary" id="back">VOLVER</button>${this.game.trial ? '<button class="secondary" id="abandon">ABANDONAR EL PANTEÓN</button>' : ''}<div class="menu-options"><button class="secondary" id="controls">REASIGNAR TECLAS</button><button class="secondary" id="audio">AUDIO</button><button class="secondary" id="fullscreen">F · PANTALLA COMPLETA</button></div>`);
     const back = from === 'title' ? () => this.title() : () => this.resume();
     this.bindOptions(back);
     this.on('#back', back);
     this.on('#controls', () => this.controls(back));
+    this.on('#abandon', () => this.leaveTrial());
   }
 
   /** Rebinding: pick an action, then press the new key. */
@@ -244,7 +248,7 @@ ${row('music', 'Música')}${row('sfx', 'Efectos')}</div>
       ({ id, label }) =>
         `<div class="bind-row"><span>${esc(label)}</span><button class="secondary bind" data-action="${id}">${this.rebinding === id ? 'PRESIONÁ UNA TECLA…' : esc(this.input.label(id))}</button></div>`,
     ).join('');
-    this.panel(`<div class="eyebrow">CONTROLES</div><h2>Tus teclas</h2><div class="bindings">${rows}</div><p class="keys">ENTER · CAMBIAR &nbsp; ESC · CANCELAR &nbsp; ESC, F Y ENTER ESTÁN RESERVADAS</p><button class="secondary" id="reset">RESTAURAR</button><button class="primary" id="back">VOLVER</button>`);
+    this.panel(`<div class="eyebrow">CONTROLES</div><h2>Tus teclas</h2><div class="bindings">${rows}</div><p class="keys">ENTER · CAMBIAR &nbsp; ESC · CANCELAR &nbsp; ESC, F, ENTER Y TAB ESTÁN RESERVADAS</p><button class="secondary" id="reset">RESTAURAR</button><button class="primary" id="back">VOLVER</button>`);
     for (const button of this.overlay.querySelectorAll<HTMLButtonElement>('.bind')) {
       button.onclick = () => {
         this.rebinding = button.dataset.action as Action;
@@ -372,6 +376,10 @@ ${row('music', 'Música')}${row('sfx', 'Efectos')}</div>
 
   map(): void {
     if (this.game.mode !== 'play') return;
+    if (this.game.trial) {
+      this.toast('Los recuerdos del panteón no tienen mapa.');
+      return;
+    }
     if (!this.game.progress.items.has('map')) {
       this.toast('Todavía no tenés un mapa.');
       return;
@@ -392,7 +400,90 @@ ${row('music', 'Música')}${row('sfx', 'Efectos')}</div>
     this.on('#back', () => this.resume());
   }
 
+  // ------------------------------------------------------------ pantheon
+
+  /** Fights against bosses already defeated in the journey, with best times. */
+  pantheon(): void {
+    this.game.mode = 'title';
+    $('#hud')!.hidden = true;
+    $('#bossbar')!.hidden = true;
+    const beaten = new Set(this.game.pantheonBosses());
+    const records = loadRecords(this.storage);
+    const bosses = Object.entries(this.game.content.bosses).filter(([, def]) => def.arena);
+    const rows = bosses
+      .map(([id, def]) =>
+        beaten.has(id)
+          ? `<div class="spell-row"><div><strong>${esc(def.name)}</strong><small>Mejor tiempo: ${formatTime(records.duel[id])}</small></div><div class="actions"><button class="secondary" data-duel="${id}">DUELO</button></div></div>`
+          : '<div class="spell-row locked"><div><strong>???</strong><small>Vencelo en tu viaje para guardar su recuerdo.</small></div></div>',
+      )
+      .join('');
+    const allBeaten = bosses.every(([id]) => beaten.has(id));
+    const rush = `<div class="spell-row fusion"><div><strong>Todos los guardianes seguidos</strong><small>${allBeaten ? `La vida se conserva entre peleas; la magia se recarga. Mejor tiempo: ${formatTime(records.rush)}` : 'Se abre al vencer a todos los guardianes.'}</small></div><div class="actions"><button class="secondary" id="rush"${allBeaten ? '' : ' disabled'}>DESAFÍO</button></div></div>`;
+    this.panel(
+      `<div class="eyebrow">PANTEÓN DE LOS SELLOS</div><h2>Ecos de batalla</h2><p>Cada sello guarda el recuerdo de su guardián. Enfrentalos otra vez con tus habilidades y magias equipadas. Nada de lo que pase acá cambia tu viaje.</p><div class="spell-list">${rows}${rush}</div><button class="primary" id="back">VOLVER</button>`,
+      'shrine-panel',
+    );
+    for (const button of this.overlay.querySelectorAll<HTMLButtonElement>('[data-duel]'))
+      button.onclick = () => this.beginTrial('duel', [button.dataset.duel!]);
+    this.on('#rush', () => this.beginTrial('rush', bosses.map(([id]) => id)));
+    this.on('#back', () => this.title());
+  }
+
+  private beginTrial(kind: 'duel' | 'rush', queue: string[]): void {
+    this.audio.play('menu');
+    if (!this.game.startTrial(kind, queue)) return;
+    $('#hud')!.hidden = false;
+    this.resume();
+  }
+
+  private leaveTrial(): void {
+    this.game.endTrial();
+    this.pantheon();
+  }
+
+  private trialCleared(boss: BossDef, done: boolean, time: number): void {
+    const t = this.game.trial!;
+    this.audio.play('victory');
+    const name = (id: string) => esc(this.game.content.bosses[id].name);
+    if (!done) {
+      this.panel(
+        `<div class="eyebrow">PANTEÓN · RECUERDO SUPERADO</div><h2>${esc(boss.name)}</h2><p>Tiempo: ${formatTime(time)}</p><p>Siguiente: <strong>${name(t.queue[t.index])}</strong>. Tu vida se conserva y la magia se recarga.</p><button class="primary" id="next">CONTINUAR</button><button class="secondary" id="leave">ABANDONAR</button>`,
+      );
+      this.on('#next', () => {
+        this.game.nextTrialBoss();
+        this.resume();
+      });
+      this.on('#leave', () => this.leaveTrial());
+      return;
+    }
+    const best = recordTime(this.storage, t.kind, t.queue[0], time);
+    const title = t.kind === 'rush' ? 'Desafío superado' : 'Duelo superado';
+    this.panel(
+      `<div class="eyebrow">PANTEÓN DE LOS SELLOS</div><h2>${title}</h2><div class="ornament">─ ᛟ ─</div><p class="trial-time">${formatTime(time)}</p><p>${best ? '¡Nuevo mejor tiempo!' : `Mejor tiempo: ${formatTime(t.kind === 'rush' ? loadRecords(this.storage).rush : loadRecords(this.storage).duel[t.queue[0]])}`}</p><button class="primary" id="again">REPETIR</button><button class="secondary" id="leave">VOLVER AL PANTEÓN</button>`,
+    );
+    this.on('#again', () => {
+      this.game.retryTrial();
+      this.resume();
+    });
+    this.on('#leave', () => this.leaveTrial());
+  }
+
+  private trialLost(): void {
+    const t = this.game.trial!;
+    this.audio.play('death');
+    const boss = this.game.content.bosses[t.queue[Math.min(t.index, t.queue.length - 1)]];
+    this.panel(
+      `<div class="eyebrow">PANTEÓN DE LOS SELLOS</div><h2>El recuerdo te venció</h2><p>${esc(boss.name)} · ${formatTime(t.time)}</p><button class="primary" id="again">REINTENTAR</button><button class="secondary" id="leave">VOLVER AL PANTEÓN</button>`,
+    );
+    this.on('#again', () => {
+      this.game.retryTrial();
+      this.resume();
+    });
+    this.on('#leave', () => this.leaveTrial());
+  }
+
   private death(): void {
+    if (this.game.trial) return this.trialLost();
     this.audio.play('death');
     this.panel('<div class="eyebrow">LAS RAÍCES RECUERDAN TUS PASOS</div><h2>La llama no se apaga</h2><p>Conservás tus descubrimientos. Volvé al último santuario y observá las señales antes de atacar.</p><button class="primary" id="retry">VOLVER A INTENTAR</button>');
     this.on('#retry', () => {
@@ -416,6 +507,12 @@ ${row('music', 'Música')}${row('sfx', 'Efectos')}</div>
       return;
     }
     const mode = this.game.mode;
+    if (e.code === 'Tab') {
+      // Tab never leaves the game (to the browser's address bar): in menus it cycles the overlay's controls.
+      e.preventDefault();
+      if (mode !== 'play') this.cycleFocus(e.shiftKey ? -1 : 1);
+      return;
+    }
     const typing = e.target instanceof HTMLInputElement;
     if (typing && e.code !== 'Escape' && e.code !== 'Enter') return;
     if (e.code === 'KeyF' && !typing) {
@@ -428,7 +525,7 @@ ${row('music', 'Música')}${row('sfx', 'Efectos')}</div>
       if (!e.repeat) mode === 'map' ? this.resume() : this.map();
       return;
     }
-    if (this.input.matches('grimoire', e.code) && (mode === 'play' || (mode === 'journal' && e.code !== 'Tab'))) {
+    if (this.input.matches('grimoire', e.code) && (mode === 'play' || mode === 'journal')) {
       e.preventDefault();
       if (!e.repeat) mode === 'journal' ? this.resume() : this.journal();
       return;
@@ -444,15 +541,20 @@ ${row('music', 'Música')}${row('sfx', 'Efectos')}</div>
     if (mode !== 'play') {
       if (ARROWS.includes(e.code) && !typing) {
         e.preventDefault();
-        const items = focusables(this.overlay);
-        const i = items.indexOf(document.activeElement as HTMLElement);
-        const d = e.code === 'ArrowUp' || e.code === 'ArrowLeft' ? -1 : 1;
-        items[(i + d + items.length) % items.length]?.focus();
+        this.cycleFocus(e.code === 'ArrowUp' || e.code === 'ArrowLeft' ? -1 : 1);
       }
       return;
     }
-    if (this.input.isBound(e.code) || ARROWS.includes(e.code) || e.code === 'Space' || e.code === 'Tab') e.preventDefault();
+    if (this.input.isBound(e.code) || ARROWS.includes(e.code) || e.code === 'Space') e.preventDefault();
     this.input.keyDown(e.code);
+  }
+
+  /** Moves focus to the next or previous control of the open menu, wrapping around. */
+  private cycleFocus(d: number): void {
+    const items = focusables(this.overlay);
+    if (!items.length) return;
+    const i = items.indexOf(document.activeElement as HTMLElement);
+    items[(i + d + items.length) % items.length].focus();
   }
 
   onBlur(): void {
@@ -468,6 +570,8 @@ ${row('music', 'Música')}${row('sfx', 'Efectos')}</div>
       if (this.toastTimer <= 0) this.hideToast();
     }
     if (this.game.mode === 'title') return;
+    // In the Pantheon, the zone label becomes the run's clock.
+    if (this.game.trial) $('#region')!.textContent = `PANTEÓN · ${formatTime(this.game.trial.time)}`;
     const { player: p, progress } = this.game;
     const boss = this.game.enemies.find((e) => e.boss && e.hp > 0);
     const mana = progress.spells.size ? '◆'.repeat(Math.max(0, p.mana)) + '◇'.repeat(Math.max(0, PLAYER.maxMana - p.mana)) : '— MAGIA DORMIDA —';

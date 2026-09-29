@@ -14,6 +14,10 @@ Fuiste invocado desde nuestro mundo por Iulin Saerh, el escriba de la Torre Gris
 - **Niveles:** los enemigos sueltan esquirlas de maná (✦). En el santuario se gastan para subir cada magia hasta nivel 3.
 - **Fusiones:** dos magias en nivel 2 se funden en una nueva: Ascua + Céfiro = Torbellino ígneo, Ascua + Égida = Égida ígnea, Céfiro + Escarcha = Ventisca.
 
+## Panteón
+
+Desde el menú principal, el **Panteón** permite volver a pelear contra los jefes ya vencidos en el viaje, con las habilidades y magias equipadas del guardado: un **duelo** por jefe o el **desafío** de todos seguidos (la vida se conserva entre peleas y la magia se recarga). Guarda el mejor tiempo de cada uno y no cambia nada del viaje. Cada jefe define dónde pelea con `arena` en `bosses.json` (sala, casilla de inicio y fichas que prepara, como las zarzas ya quemadas).
+
 ## Controles (reasignables en Pausa → Reasignar teclas)
 
 | Acción | Teclas |
@@ -25,7 +29,7 @@ Fuiste invocado desde nuestro mundo por Iulin Saerh, el escriba de la Torre Gris
 | Impulso | Shift |
 | Magias equipadas (ranuras 1–4) | K · L · I · O |
 | Interactuar / descansar | E |
-| Grimorio · Mapa · Pausa · Pantalla completa | Tab · M · Esc · F |
+| Grimorio · Mapa · Pausa · Pantalla completa | Q · M · Esc · F |
 
 ## Desarrollo
 

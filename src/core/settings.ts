@@ -1,6 +1,6 @@
 import { DEFAULT_AUDIO, type AudioSettings } from '../audio/engine.ts';
 import { STORAGE } from '../config.ts';
-import { DEFAULT_BINDINGS, type Action, type Bindings } from './input.ts';
+import { DEFAULT_BINDINGS, RESERVED, type Action, type Bindings } from './input.ts';
 import type { KeyValueStorage } from './save.ts';
 
 export interface Settings {
@@ -29,8 +29,10 @@ export function loadSettings(storage: KeyValueStorage | null): Settings {
       };
     }
     for (const action of Object.keys(settings.bindings) as Action[]) {
+      // Reserved keys are dropped: the grimoire used to open with Tab, which now stays inside menus.
       const keys = raw?.bindings?.[action];
-      if (Array.isArray(keys) && keys.length && keys.every((k) => typeof k === 'string')) settings.bindings[action] = keys;
+      const usable = Array.isArray(keys) ? keys.filter((k): k is string => typeof k === 'string' && !RESERVED.has(k)) : [];
+      if (usable.length) settings.bindings[action] = usable;
     }
   } catch {
     /* defaults */

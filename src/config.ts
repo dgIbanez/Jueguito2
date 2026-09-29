@@ -42,4 +42,5 @@ export const STORAGE = {
   save: 'runas-rotas-save',
   legacySave: 'runas-rotas-v1',
   settings: 'runas-rotas-settings',
+  records: 'runas-rotas-panteon',
 } as const;

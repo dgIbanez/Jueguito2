@@ -31,7 +31,7 @@ export const DEFAULT_BINDINGS: Bindings = {
   spell3: ['KeyI'],
   spell4: ['KeyO'],
   interact: ['KeyE'],
-  grimoire: ['Tab'],
+  grimoire: ['KeyQ'],
   map: ['KeyM'],
 };
 
@@ -39,7 +39,7 @@ export const DEFAULT_BINDINGS: Bindings = {
 export const SPELL_ACTIONS: Action[] = ['spell1', 'spell2', 'spell3', 'spell4'];
 
 /** Keys the game never lets the player rebind. */
-export const RESERVED = new Set(['Escape', 'KeyF', 'Enter']);
+export const RESERVED = new Set(['Escape', 'KeyF', 'Enter', 'Tab']);
 
 const NAMES: Record<string, string> = {
   Space: 'Espacio',

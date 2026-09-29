@@ -8,6 +8,7 @@
     "shards": 25,
     "reward": "sello_bosque",
     "music": ["groth", "groth2"],
+    "arena": { "room": "Trono", "spawn": [9, 19], "flags": ["gate:thorns_throne"] },
     "phases": [
       { "at": 1, "pattern": ["slash", "throw", "leap", "charge"] },
       {
@@ -46,6 +47,7 @@
     "shards": 40,
     "reward": "sello_caverna",
     "music": ["vharn", "vharn2"],
+    "arena": { "room": "Corazon", "spawn": [6, 19], "flags": [] },
     "phases": [
       { "at": 1, "pattern": ["eruption", "rain", "leap", "beam", "roll"] },
       {

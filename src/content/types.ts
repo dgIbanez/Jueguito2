@@ -94,6 +94,8 @@ export interface BossDef {
   h: number;
   hp: number;
   shards: number;
+  /** Where the Pantheon stages the fight: room, player start (feet cell) and world flags the fight needs. */
+  arena?: { room: string; spawn: [number, number]; flags: string[] };
   /** Music track per phase (the last one repeats). */
   music?: string[];
   /** Item granted on victory (a seal). */

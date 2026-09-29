@@ -69,7 +69,7 @@ test('the player walks, jumps and changes rooms', async ({ page }) => {
 
 test('notes, map pickup and map view', async ({ page }) => {
   await startGame(page);
-  await page.keyboard.press('Tab');
+  await page.keyboard.press('KeyQ');
   await expect(page.locator('#overlay')).toContainText('Notas del viaje');
   await expect(page.locator('#overlay')).not.toContainText('Ascua');
   await page.keyboard.press('Escape');
@@ -94,7 +94,7 @@ test('grimoire research teaches Ascua', async ({ page }) => {
     game.progress.items.add('grimoire');
     game.progress.pages.set('page_ascua', { solved: false });
   });
-  await page.keyboard.press('Tab');
+  await page.keyboard.press('KeyQ');
   await expect(page.locator('.grimoire')).toBeVisible();
   await expect(page.locator('.right-page')).toContainText('Página ilegible');
   await expect(page.locator('.grimoire')).not.toContainText('Ascua');
@@ -113,7 +113,7 @@ test('grimoire research teaches Ascua', async ({ page }) => {
   await expect(page.locator('#toast')).toContainText('K para lanzarla');
   expect(await state(page, 'game.mode')).toBe('play');
 
-  await page.keyboard.press('Tab');
+  await page.keyboard.press('KeyQ');
   await expect(page.locator('.right-page')).toContainText('Ascua');
   await expect(page.locator('.right-page')).toContainText('La llama abre el camino.');
 });
@@ -126,7 +126,7 @@ test('rune page: murals fill in glyphs and the player deduces the rest', async (
     game.progress.pages.set('page_egida', { solved: false });
     for (const id of ['mural_runa', 'mural_guarda', 'mural_espera']) game.progress.clues.add(id);
   });
-  await page.keyboard.press('Tab');
+  await page.keyboard.press('KeyQ');
   await page.locator('.page-link[data-page="page_egida"]').click();
   await page.locator('#research').click();
   await expect(page.locator('.rune-grid label.known')).toHaveCount(9);
@@ -145,13 +145,13 @@ test('rune page: murals fill in glyphs and the player deduces the rest', async (
 test('the grimoire only lists pages already found', async ({ page }) => {
   await startGame(page);
   await page.evaluate(() => (window as any).runas.game.progress.items.add('grimoire'));
-  await page.keyboard.press('Tab');
+  await page.keyboard.press('KeyQ');
   await expect(page.locator('.page-link')).toHaveCount(0);
   await expect(page.locator('.grimoire')).not.toContainText('III');
   await page.keyboard.press('Escape');
 
   await page.evaluate(() => (window as any).runas.game.progress.pages.set('page_ascua', { solved: false }));
-  await page.keyboard.press('Tab');
+  await page.keyboard.press('KeyQ');
   await expect(page.locator('.page-link')).toHaveCount(1);
   await expect(page.locator('.page-link')).toHaveText('II · Página ilegible');
   await expect(page.locator('.grimoire')).not.toContainText('Hoja arrancada');
@@ -166,7 +166,7 @@ test('the rune research screen has no sidebar', async ({ page }) => {
     game.progress.pages.set('page_egida', { solved: false });
     game.progress.clues.add('mural_runa');
   });
-  await page.keyboard.press('Tab');
+  await page.keyboard.press('KeyQ');
   await page.locator('#research').click();
   await expect(page.locator('.rune-grid')).toBeVisible();
   await expect(page.locator('.cipher-aside')).toHaveCount(0);
@@ -179,7 +179,7 @@ test('a solved page keeps its discovery note and signature in the grimoire', asy
     game.progress.items.add('grimoire');
     game.progress.pages.set('page_ascua', { solved: true, key: { shift: 3 } });
   });
-  await page.keyboard.press('Tab');
+  await page.keyboard.press('KeyQ');
   await expect(page.locator('.right-page')).toContainText('Ascua');
   await expect(page.locator('.right-page')).toContainText('Iulin Saerh');
   await expect(page.locator('.right-page')).toContainText('IULIN SAERH');
@@ -378,4 +378,54 @@ test('audio: music follows the game and volumes are set with the keyboard', asyn
   await expect.poll(track).toBe('groth');
   await page.keyboard.press('KeyJ');
   await page.waitForTimeout(500);
+});
+
+test('Q opens the grimoire and Tab never takes focus out of the game', async ({ page }) => {
+  await startGame(page);
+  await page.evaluate(() => (window as any).runas.game.progress.items.add('grimoire'));
+  await page.keyboard.press('KeyQ');
+  await expect(page.locator('.grimoire')).toBeVisible();
+  for (let i = 0; i < 12; i++) {
+    await page.keyboard.press('Tab');
+    expect(await page.evaluate(() => !!document.activeElement?.closest('#overlay'))).toBe(true);
+  }
+  await page.keyboard.press('Shift+Tab');
+  expect(await page.evaluate(() => !!document.activeElement?.closest('#overlay'))).toBe(true);
+  await page.keyboard.press('KeyQ');
+  await expect.poll(() => state(page, 'game.mode')).toBe('play');
+  // During play Tab does nothing, and focus stays on the game.
+  await page.keyboard.press('Tab');
+  expect(await page.evaluate(() => document.activeElement?.id)).toBe('canvas');
+});
+
+test('pantheon: duel a defeated boss and keep the best time', async ({ page }) => {
+  await startGame(page);
+  await page.evaluate(() => {
+    const { game, ui } = (window as any).runas;
+    game.progress.flags.add('boss:groth');
+    game.save();
+    ui.title();
+  });
+  await page.locator('#pantheon').click();
+  await expect(page.locator('#overlay')).toContainText('Ecos de batalla');
+  await expect(page.locator('[data-duel]')).toHaveCount(1);
+  await expect(page.locator('#overlay')).toContainText('???');
+  await expect(page.locator('#rush')).toBeDisabled();
+  await page.screenshot({ path: 'test-results/screens/pantheon.png' });
+
+  await page.locator('[data-duel="groth"]').click();
+  await expect.poll(() => state(page, 'game.room.id')).toBe('Trono');
+  await expect(page.locator('#region')).toContainText('PANTEÓN ·');
+  await expect(page.locator('#bossbar')).toBeVisible();
+  await page.evaluate(() => {
+    const { game } = (window as any).runas;
+    game.hitEnemy(game.enemies.find((e: any) => e.boss), 99);
+  });
+  await expect(page.locator('#overlay')).toContainText('Duelo superado');
+  await expect(page.locator('#overlay')).toContainText('¡Nuevo mejor tiempo!');
+  await page.screenshot({ path: 'test-results/screens/pantheon-win.png' });
+  await page.locator('#leave').click();
+  await expect(page.locator('#overlay')).toContainText('Mejor tiempo: 0:');
+  // The journey is untouched.
+  expect(await page.evaluate(() => JSON.parse(localStorage.getItem('runas-rotas-save')!).flags)).toEqual(['boss:groth']);
 });

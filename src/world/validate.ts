@@ -116,6 +116,11 @@ export function validateWorld(c: Content): ValidationReport {
       for (const s of phase.transition?.summon ?? []) if (!c.enemies[s.kind]) errors.push(`Jefe ${id}: refuerzo desconocido "${s.kind}".`);
     });
     if (boss.reward && !c.items[boss.reward]) errors.push(`Jefe ${id}: recompensa desconocida "${boss.reward}".`);
+    if (boss.arena) {
+      const arena = world.byId.get(boss.arena.room);
+      if (!arena) errors.push(`Jefe ${id}: la sala de su arena "${boss.arena.room}" no existe.`);
+      else if (!entitiesOf(arena, 'Boss').some((b) => text(b, 'boss') === id)) errors.push(`Jefe ${id}: su arena "${arena.id}" no lo contiene.`);
+    } else warnings.push(`Jefe ${id}: sin "arena", no aparece en el Panteón.`);
     const rig = c.rigs?.[boss.look];
     if (!rig) errors.push(`Jefe ${id}: no hay esqueleto "${boss.look}" en rigs.json.`);
     else if (!rig.clips.idle) errors.push(`Esqueleto ${boss.look}: falta la animación "idle".`);

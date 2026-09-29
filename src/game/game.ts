@@ -15,7 +15,17 @@ import { hitsSolid, moveBody, surfaceBelow, touchesTile } from '../world/collisi
 import { entitiesOf, roomAt, Tile, type EntitySpawn, type RoomData } from '../world/ldtk.ts';
 import { hasToken, newProgress, type Checkpoint, type Progress } from './progress.ts';
 
-export type Mode = 'title' | 'prologue' | 'play' | 'pause' | 'journal' | 'cipher' | 'map' | 'reading' | 'shrine' | 'dead' | 'win';
+export type Mode = 'title' | 'prologue' | 'play' | 'pause' | 'journal' | 'cipher' | 'map' | 'reading' | 'shrine' | 'interlude' | 'dead' | 'win';
+
+/** A Pantheon run: one boss (duel) or all of them in a row (rush). */
+export interface Trial {
+  kind: 'duel' | 'rush';
+  queue: string[];
+  /** Index of the boss being fought. */
+  index: number;
+  /** Seconds of fighting so far. */
+  time: number;
+}
 
 export interface Shot extends Rect {
   vx: number;
@@ -75,6 +85,8 @@ export interface GameEvents {
   readClue: string;
   /** The player rested; the UI opens the spell preparation screen. */
   shrine: undefined;
+  /** A Pantheon boss fell: `done` when it was the last of the run. */
+  trialCleared: { boss: BossDef; done: boolean; time: number };
 }
 
 /** Entities the player can use with the interact key. */
@@ -203,7 +215,68 @@ export class Game {
     this.corpses = [];
   }
 
+  // ------------------------------------------------------------ pantheon
+
+  /** The Pantheon run in progress, or null during the journey. */
+  trial: Trial | null = null;
+
+  /** Bosses defeated in the saved journey: the only ones the Pantheon offers. */
+  pantheonBosses(): string[] {
+    const saved = this.store.load();
+    return Object.keys(this.content.bosses).filter((id) => this.content.bosses[id].arena && saved?.flags.has(`boss:${id}`));
+  }
+
+  /**
+   * Starts a Pantheon run with the saved abilities, spells and loadout. It
+   * plays on a copy of the progress and never saves, so the journey is untouched.
+   */
+  startTrial(kind: Trial['kind'], queue: string[]): boolean {
+    const saved = this.store.load();
+    const beaten = this.pantheonBosses();
+    if (!saved || !queue.length || !queue.every((id) => beaten.includes(id))) return false;
+    this.trial = { kind, queue, index: 0, time: 0 };
+    this.progress = saved;
+    this.player = createPlayer(0, 0);
+    this.blood.clear();
+    this.enterArena(queue[0]);
+    this.mode = 'play';
+    return true;
+  }
+
+  /** Stages a boss's arena: only the flags its fight needs, so the boss appears. */
+  private enterArena(id: string): void {
+    const arena = this.content.bosses[id].arena!;
+    const T = this.content.world.tile;
+    this.progress.flags = new Set(arena.flags);
+    this.progress.defeated.clear();
+    this.enterRoom(arena.room, arena.spawn[0] * T + T / 2 - PLAYER.w / 2, (arena.spawn[1] + 1) * T - PLAYER.h);
+    this.enemies = this.enemies.filter((e) => e.boss);
+    this.player.inv = 1;
+  }
+
+  /** In a rush: on to the next boss. Health carries over; magic refills. */
+  nextTrialBoss(): void {
+    const t = this.trial;
+    if (!t || t.index >= t.queue.length) return;
+    this.player.mana = PLAYER.maxMana;
+    this.enterArena(t.queue[t.index]);
+    this.mode = 'play';
+  }
+
+  retryTrial(): void {
+    if (this.trial) this.startTrial(this.trial.kind, this.trial.queue);
+  }
+
+  /** Leaves the Pantheon, restoring the journey exactly as saved. */
+  endTrial(): void {
+    this.trial = null;
+    this.progress = this.store.load() ?? newProgress(startCheckpoint(this.content));
+    this.enemies = [];
+    this.mode = 'title';
+  }
+
   save(): void {
+    if (this.trial) return;
     if (this.store.write(this.progress) || this.saveWarned) return;
     this.saveWarned = true;
     this.toast('Guardado no disponible en este navegador. Podés continuar en esta sesión.');
@@ -321,10 +394,25 @@ export class Game {
 
   // ------------------------------------------------------------ simulation
 
+  /** Falling corpses and particles, which keep settling behind victory screens. */
+  private settle(dt: number): void {
+    for (const c of this.corpses) c.life -= dt;
+    this.corpses = this.corpses.filter((c) => c.life > 0);
+    for (const a of this.particles) {
+      a.x += a.vx * dt;
+      a.y += a.vy * dt;
+      a.vy += 230 * dt;
+      a.life -= dt;
+    }
+    this.particles = this.particles.filter((a) => a.life > 0).slice(-250);
+  }
+
   tick(dt: number, intent: Intent): void {
     this.time += dt;
     this.fade = Math.max(0, this.fade - dt);
+    if (this.mode === 'win' || this.mode === 'interlude') this.settle(dt);
     if (this.mode !== 'play') return;
+    if (this.trial) this.trial.time += dt;
     this.shake = Math.max(0, this.shake - dt);
     const p = this.player;
     const room = this.room;
@@ -363,15 +451,7 @@ export class Game {
     this.burnAround();
     for (const fx of this.effects) fx.life -= dt;
     this.effects = this.effects.filter((fx) => fx.life > 0);
-    for (const c of this.corpses) c.life -= dt;
-    this.corpses = this.corpses.filter((c) => c.life > 0);
-    for (const a of this.particles) {
-      a.x += a.vx * dt;
-      a.y += a.vy * dt;
-      a.vy += 230 * dt;
-      a.life -= dt;
-    }
-    this.particles = this.particles.filter((a) => a.life > 0).slice(-250);
+    this.settle(dt);
     this.updateCamera(dt);
   }
 
@@ -631,9 +711,23 @@ export class Game {
     this.corpses.push({ enemy: { ...e, state: 'idle', hit: 0, frozen: 0 }, life: 0.65 });
     this.stain(e);
     const shards = e.boss ? e.boss.def.shards : (e.def?.shards ?? 0);
-    if (shards) {
+    // Nothing is earned in the Pantheon.
+    if (shards && !this.trial) {
       this.progress.shards += shards;
       this.burst(centerX(e), centerY(e), '#9fe3ff', Math.min(24, shards * 3));
+    }
+    if (e.boss && this.trial) {
+      // A Pantheon boss: nothing is earned or saved; the run moves on.
+      const t = this.trial;
+      this.enemies = this.enemies.filter((x) => !x.summoned);
+      this.arrows = [];
+      this.waves = [];
+      this.hazards = [];
+      t.index++;
+      const done = t.index >= t.queue.length;
+      this.mode = done ? 'win' : 'interlude';
+      this.events.emit('trialCleared', { boss: e.boss.def, done, time: t.time });
+      return;
     }
     if (e.boss) {
       const { def, id } = e.boss;
