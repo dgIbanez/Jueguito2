@@ -303,3 +303,35 @@ test('chapter II: the caverns and Vharn render', async ({ page }) => {
   await page.waitForTimeout(350);
   await page.screenshot({ path: 'test-results/screens/vharn.png' });
 });
+
+test('boss rigs animate every attack', async ({ page }) => {
+  await startGame(page);
+  const shoot = async (room: string, move: string, state: string, progress: number, name: string, phase = 0) => {
+    await page.evaluate(
+      ({ room, move, state, progress, phase }) => {
+        const { game } = (window as any).runas;
+        if (game.room.id !== room) {
+          game.progress.flags.add('gate:thorns_throne');
+          game.enterRoom(room, 120, 448);
+        }
+        game.player.inv = 99;
+        game.enemies = game.enemies.filter((e: any) => e.boss);
+        const b = game.enemies[0];
+        b.boss.phase = phase;
+        b.boss.move = move;
+        Object.assign(b, { state, timer: 10 * (1 - progress), face: -1, lock: -1, ground: true, vx: 0 });
+        b.boss.span = 10;
+        game.mode = 'pause';
+      },
+      { room, move, state, progress, phase },
+    );
+    await page.waitForTimeout(250);
+    await page.screenshot({ path: `test-results/screens/rig-${name}.png`, clip: { x: 640, y: 380, width: 480, height: 300 } });
+  };
+  for (const [move, state, t] of [['slash', 'wind', 1], ['slash', 'strike', 0.3], ['throw', 'wind', 1], ['charge', 'strike', 0.5], ['leap', 'wind', 1]] as const)
+    await shoot('Trono', move, state, t, `groth-${move}-${state}`);
+  await shoot('Trono', 'slash', 'transition', 0.5, 'groth-summon', 1);
+  for (const [move, state, t] of [['eruption', 'wind', 1], ['eruption', 'strike', 0.5], ['rain', 'wind', 1], ['beam', 'wind', 1], ['roll', 'strike', 0.3], ['shatter', 'wind', 1]] as const)
+    await shoot('Corazon', move, state, t, `vharn-${move}-${state}`);
+  await shoot('Corazon', 'beam', 'transition', 0.6, 'vharn-roar', 1);
+});

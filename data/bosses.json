@@ -7,20 +7,29 @@
     "hp": 32,
     "shards": 25,
     "reward": "sello_bosque",
-    "enrageAt": 0.5,
-    "pattern": ["slash", "leap", "charge"],
+    "phases": [
+      { "at": 1, "pattern": ["slash", "throw", "leap", "charge"] },
+      {
+        "at": 0.5,
+        "pattern": ["slash", "charge", "throw", "leap", "slash"],
+        "transition": {
+          "kind": "summon",
+          "time": 1.1,
+          "summon": [
+            { "x": 2, "y": 19, "kind": "hob" },
+            { "x": 37, "y": 19, "kind": "hob" },
+            { "x": 10, "y": 15, "kind": "archer" },
+            { "x": 28, "y": 15, "kind": "archer" }
+          ]
+        }
+      }
+    ],
     "moves": {
       "slash": { "windup": 0.9, "windupEnraged": 0.65, "duration": 0.6, "recover": 1.15, "recoverEnraged": 0.65, "reach": 100 },
+      "throw": { "windup": 0.8, "windupEnraged": 0.6, "duration": 0.5, "recover": 1.1, "recoverEnraged": 0.7, "speed": 430, "speedEnraged": 520, "accel": 560 },
       "leap": { "windup": 0.9, "windupEnraged": 0.65, "duration": 1.3, "recover": 1.15, "recoverEnraged": 0.65, "jump": 560, "wave": 220, "waveEnraged": 300 },
       "charge": { "windup": 0.9, "windupEnraged": 0.65, "duration": 0.65, "recover": 1.15, "recoverEnraged": 0.65, "speed": 360, "speedEnraged": 470 }
     },
-    "summonTime": 1.1,
-    "summon": [
-      { "x": 2, "y": 19, "kind": "hob" },
-      { "x": 37, "y": 19, "kind": "hob" },
-      { "x": 10, "y": 15, "kind": "archer" },
-      { "x": 28, "y": 15, "kind": "archer" }
-    ],
     "victory": {
       "eyebrow": "CAPÍTULO I · COMPLETADO",
       "title": "El bosque vuelve a respirar",
@@ -32,23 +41,25 @@
     "look": "golem",
     "w": 60,
     "h": 76,
-    "hp": 44,
+    "hp": 48,
     "shards": 40,
     "reward": "sello_caverna",
-    "enrageAt": 0.5,
-    "pattern": ["leap", "rain", "charge", "rain"],
-    "moves": {
-      "leap": { "windup": 1.0, "windupEnraged": 0.75, "duration": 1.3, "recover": 1.1, "recoverEnraged": 0.7, "jump": 520, "wave": 240, "waveEnraged": 320 },
-      "rain": { "windup": 0.8, "windupEnraged": 0.6, "duration": 1.0, "recover": 1.0, "recoverEnraged": 0.7, "count": 5, "speed": 300, "speedEnraged": 380 },
-      "charge": { "windup": 0.9, "windupEnraged": 0.7, "duration": 0.8, "recover": 1.2, "recoverEnraged": 0.8, "speed": 330, "speedEnraged": 430 }
-    },
-    "summonTime": 1.2,
-    "summon": [
-      { "x": 8, "y": 9, "kind": "bat" },
-      { "x": 31, "y": 9, "kind": "bat" },
-      { "x": 3, "y": 19, "kind": "crawler" },
-      { "x": 36, "y": 19, "kind": "crawler" }
+    "phases": [
+      { "at": 1, "pattern": ["eruption", "rain", "leap", "beam", "roll"] },
+      {
+        "at": 0.5,
+        "pattern": ["shatter", "beam", "eruption", "roll", "rain", "beam", "eruption"],
+        "transition": { "kind": "roar", "time": 1.4 }
+      }
     ],
+    "moves": {
+      "eruption": { "windup": 0.85, "windupEnraged": 0.6, "duration": 1.1, "recover": 0.9, "recoverEnraged": 0.55, "count": 6, "countEnraged": 9, "spacing": 64, "delay": 0.35, "step": 0.1, "life": 0.45, "height": 76 },
+      "rain": { "windup": 0.8, "windupEnraged": 0.55, "duration": 1.0, "recover": 1.0, "recoverEnraged": 0.6, "count": 5, "countEnraged": 8, "speed": 300, "speedEnraged": 380 },
+      "leap": { "windup": 1.0, "windupEnraged": 0.7, "duration": 1.3, "recover": 1.1, "recoverEnraged": 0.6, "jump": 520, "wave": 240, "waveEnraged": 330 },
+      "beam": { "windup": 1.0, "windupEnraged": 0.7, "duration": 0.6, "recover": 1.0, "recoverEnraged": 0.6, "height": 22 },
+      "roll": { "windup": 0.9, "windupEnraged": 0.6, "duration": 0.9, "recover": 1.2, "recoverEnraged": 0.7, "speed": 330, "speedEnraged": 460, "bounces": 0, "bouncesEnraged": 1 },
+      "shatter": { "windup": 0.9, "windupEnraged": 0.9, "duration": 1.5, "recover": 1.2, "recoverEnraged": 1.0, "jump": 600, "wave": 330, "count": 4, "spacing": 70, "delay": 0.2, "step": 0.1, "life": 0.45, "height": 70 }
+    },
     "victory": {
       "eyebrow": "CAPÍTULO II · COMPLETADO",
       "title": "El eco se apaga",

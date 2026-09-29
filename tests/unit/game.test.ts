@@ -287,17 +287,34 @@ describe('progression', () => {
 });
 
 describe('boss', () => {
-  it('cycles through its three attacks', () => {
+  it('cycles through its four attacks, including the thrown cleaver', () => {
     const { game } = readyForBoss();
     const b = boss(game);
     const moves = new Set<string>();
-    for (let i = 0; i < 1000; i++) {
+    let thrown = false;
+    for (let i = 0; i < 1400; i++) {
       game.player.inv = 10;
       run(game, 1);
       if (b.state !== 'idle') moves.add(b.boss!.move);
+      if (game.arrows.some((a) => a.spin)) thrown = true;
     }
-    expect([...moves].sort()).toEqual(['charge', 'leap', 'slash']);
+    expect([...moves].sort()).toEqual(['charge', 'leap', 'slash', 'throw']);
+    expect(thrown).toBe(true);
   });
+
+  it('the thrown cleaver flies out and comes back', () => {
+    const { game } = readyForBoss();
+    const b = boss(game);
+    game.player.inv = 99;
+    b.boss!.move = 'throw';
+    Object.assign(b, { state: 'wind', timer: 0, lock: -1, face: -1 });
+    run(game, 1);
+    const cleaver = game.arrows.find((a) => a.spin)!;
+    expect(cleaver.vx).toBeLessThan(0);
+    run(game, 60);
+    expect(cleaver.vx).toBeGreaterThan(0);
+  });
+
 
   it('keeps the player inside the arena while alive', () => {
     const { game } = readyForBoss();
@@ -307,18 +324,20 @@ describe('boss', () => {
     expect(game.room.id).toBe('Trono');
   });
 
-  it('summons two hobgoblins and two archers once, at half health', () => {
+
+  it('at half health Groth calls two hobgoblins and two archers, once', () => {
     const { game } = readyForBoss();
     const b = boss(game);
     game.player.inv = 99;
     b.ground = true;
     b.hp = 17;
     run(game, 1);
-    expect(b.boss!.hordeCalled).toBe(false);
+    expect(b.boss!.phase).toBe(0);
     b.hp = 16;
     run(game, 1);
-    expect(b.boss!.hordeCalled).toBe(true);
-    expect(b.state).toBe('summon');
+    expect(b.boss!.phase).toBe(1);
+    expect(b.state).toBe('transition');
+    expect(b.boss!.guard).toBe(false);
     expect(game.enemies.some((e) => e.summoned)).toBe(false);
     b.timer = 0;
     run(game, 1);
@@ -350,12 +369,11 @@ describe('boss', () => {
     expect(game.enemies.some((e) => e.boss)).toBe(false);
   });
 
-  it('a new attempt resets the horde', () => {
+  it('a new attempt starts again from the first phase', () => {
     const { game } = readyForBoss();
-    const b = boss(game);
-    b.boss!.hordeCalled = true;
+    boss(game).boss!.phase = 1;
     stand(game, 'Sendero', 1300);
     stand(game, 'Trono', 200);
-    expect(boss(game).boss!.hordeCalled).toBe(false);
+    expect(boss(game).boss!.phase).toBe(0);
   });
 });

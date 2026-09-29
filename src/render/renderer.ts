@@ -1,14 +1,17 @@
 import { VIEW_H, VIEW_W } from '../config.ts';
 import type { Input } from '../core/input.ts';
+import type { Enemy } from '../entities/enemies.ts';
 import type { Game } from '../game/game.ts';
 import { drawBackground, drawForeground } from './background.ts';
 import { rect, type Ctx } from './draw.ts';
 import { drawProps } from './props.ts';
+import { BossAnimator, drawHazard } from './bossRender.ts';
 import { drawArrow, drawEnemy, drawHero } from './sprites.ts';
 import { renderTiles } from './tiles.ts';
 
 export class Renderer {
   private tiles = new Map<string, HTMLCanvasElement>();
+  private bosses = new BossAnimator();
   private readonly ctx: Ctx;
   private readonly game: Game;
   private readonly input: Input;
@@ -18,6 +21,13 @@ export class Renderer {
     this.game = game;
     this.input = input;
     ctx.imageSmoothingEnabled = false;
+  }
+
+  /** Bosses animate as skeletal rigs; everything else uses its sprite. */
+  private enemy(e: Enemy): void {
+    const rig = e.boss && this.game.content.rigs[e.look];
+    if (rig) this.bosses.draw(this.ctx, e, rig, this.game.time);
+    else drawEnemy(this.ctx, e, this.game.time);
   }
 
   private tileLayer(): HTMLCanvasElement {
@@ -59,12 +69,13 @@ export class Renderer {
       ctx.translate(e.x + e.w / 2, e.y + e.h);
       ctx.rotate((1 - corpse.life / 0.65) * e.face * 1.5);
       ctx.translate(-e.x - e.w / 2, -e.y - e.h);
-      drawEnemy(ctx, e, time);
+      this.enemy(e);
       ctx.restore();
     }
-    for (const e of game.enemies) if (e.hp > 0) drawEnemy(ctx, e, time);
+    for (const h of game.hazards) drawHazard(ctx, h, time);
+    for (const e of game.enemies) if (e.hp > 0) this.enemy(e);
     if (game.mode !== 'title') drawHero(ctx, game.player, time);
-    for (const a of game.arrows) drawArrow(ctx, a);
+    for (const a of game.arrows) drawArrow(ctx, a, time);
     for (const s of game.shots) {
       if (s.kind === 'vortex') {
         ctx.save();

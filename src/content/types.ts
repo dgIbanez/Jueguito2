@@ -44,6 +44,10 @@ export interface FlyerDef extends EnemyBase {
 
 export type EnemyDef = MeleeDef | ArcherDef | FlyerDef;
 
+/**
+ * Tuning of one boss attack. Fields ending in "Enraged" replace their base
+ * value from the second phase on.
+ */
 export interface BossMoveDef {
   windup: number;
   windupEnraged: number;
@@ -56,7 +60,31 @@ export interface BossMoveDef {
   waveEnraged?: number;
   speed?: number;
   speedEnraged?: number;
+  accel?: number;
   count?: number;
+  countEnraged?: number;
+  spacing?: number;
+  delay?: number;
+  step?: number;
+  life?: number;
+  height?: number;
+  bounces?: number;
+  bouncesEnraged?: number;
+}
+
+export interface BossSummon {
+  /** Tile coordinates of the arena (feet cell). */
+  x: number;
+  y: number;
+  kind: string;
+}
+
+export interface BossPhase {
+  /** Health fraction at which this phase starts (1 for the first). */
+  at: number;
+  pattern: string[];
+  /** How the boss enters the phase: calling reinforcements or a roar (invulnerable). */
+  transition?: { kind: 'summon' | 'roar'; time: number; summon?: BossSummon[] };
 }
 
 export interface BossDef {
@@ -68,13 +96,59 @@ export interface BossDef {
   shards: number;
   /** Item granted on victory (a seal). */
   reward?: string;
-  enrageAt: number;
-  pattern: string[];
+  phases: BossPhase[];
   moves: Record<string, BossMoveDef>;
-  summonTime: number;
-  /** Reinforcements in tile coordinates of the arena (feet cell). */
-  summon: { x: number; y: number; kind: string }[];
   victory: { eyebrow: string; title: string; text: string };
+}
+
+/** One drawn piece of a bone, in the bone's local space (y grows downward). */
+export interface RigPart {
+  shape: 'rect' | 'poly' | 'circle';
+  color: string;
+  x?: number;
+  y?: number;
+  w?: number;
+  h?: number;
+  r?: number;
+  points?: [number, number][];
+  /** Pulses with the pose's "glow" value. */
+  glow?: boolean;
+  /** Only drawn from this boss phase on (1-based). */
+  phase?: number;
+}
+
+export interface RigBone {
+  id: string;
+  parent?: string;
+  /** Attachment point in the parent's space (the root's is relative to the feet). */
+  x: number;
+  y: number;
+  /** Draw order: lower first. */
+  z?: number;
+  parts: RigPart[];
+}
+
+/**
+ * Pose values: bone rotations in degrees keyed by bone id, plus rootX, rootY,
+ * rootRot (degrees), scaleX, scaleY, glow (0-1) and hide_<bone> (hidden when > 0.5).
+ */
+export type Pose = Record<string, number>;
+
+export interface RigClip {
+  /** Looping clips play on wall time; the others follow the boss state's progress. */
+  loop?: boolean;
+  duration?: number;
+  /** Values held for the whole clip unless a keyframe overrides them. */
+  base?: Pose;
+  /** t from 0 to 1. */
+  keys: { t: number; pose: Pose }[];
+}
+
+export interface RigDef {
+  /** Pivot for rootRot, relative to the feet. */
+  center: [number, number];
+  bones: RigBone[];
+  clips: Record<string, RigClip>;
 }
 
 export interface AbilityDef {
@@ -165,4 +239,6 @@ export interface Content {
   clues: ClueDef[];
   scripts: Record<string, string>;
   story: StoryDef;
+  /** Skeletal rigs keyed by boss look. */
+  rigs: Record<string, RigDef>;
 }

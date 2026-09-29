@@ -1,9 +1,9 @@
 import { PHYS, PLAYER, VIEW_H, VIEW_W } from '../config.ts';
-import type { BossDef, Content, PageDef } from '../content/types.ts';
+import type { BossDef, BossSummon, Content, PageDef } from '../content/types.ts';
 import { Emitter } from '../core/events.ts';
 import { centerX, centerY, clamp, overlap, type Rect } from '../core/math.ts';
 import type { SaveContext, SaveStore } from '../core/save.ts';
-import { createBoss, updateBoss, type BossContext, type Wave } from '../entities/boss.ts';
+import { createBoss, updateBoss, type BossContext, type Hazard, type Wave } from '../entities/boss.ts';
 import { createEnemy, guardLedge, updateArcher, updateFlyer, updateMelee, type Arrow, type Enemy } from '../entities/enemies.ts';
 import { createPlayer, pogo, swordBox, updatePlayer, type Intent, type Player } from '../entities/player.ts';
 import { decode, type CipherKey } from '../magic/ciphers.ts';
@@ -117,6 +117,7 @@ export class Game {
   shots: Shot[] = [];
   arrows: Arrow[] = [];
   waves: Wave[] = [];
+  hazards: Hazard[] = [];
   particles: Particle[] = [];
   effects: Effect[] = [];
   corpses: Corpse[] = [];
@@ -151,6 +152,7 @@ export class Game {
       fireArrow: (a) => this.arrows.push(a),
       sound: (freq, duration, type) => this.sound(freq, duration, type),
       spawnWave: (w) => this.waves.push(w),
+      addHazard: (h) => this.hazards.push(h),
       summon: (list) => this.summon(list),
       shake: (s) => (this.shake = s),
     };
@@ -230,6 +232,7 @@ export class Game {
     this.shots = [];
     this.arrows = [];
     this.waves = [];
+    this.hazards = [];
     this.particles = [];
     this.effects = [];
     this.corpses = [];
@@ -351,6 +354,7 @@ export class Game {
     this.updateShots(dt, gates);
     this.updateArrows(dt, solids);
     this.updateWaves(dt);
+    this.updateHazards(dt);
     this.burnAround();
     for (const fx of this.effects) fx.life -= dt;
     this.effects = this.effects.filter((fx) => fx.life > 0);
@@ -419,7 +423,7 @@ export class Game {
     this.enemies = this.enemies.filter((e) => e.hp > 0);
   }
 
-  private summon(list: BossDef['summon']): void {
+  private summon(list: BossSummon[]): void {
     const T = this.room.tile;
     for (const s of list) {
       const def = this.content.enemies[s.kind];
@@ -496,7 +500,8 @@ export class Game {
       a.y += a.vy * dt;
       a.life -= dt;
       // One-way platforms are not solid, so arrows fly through them.
-      if (hitsSolid(this.room, a) || solids.some((s) => overlap(a, s))) {
+      if (a.ax) a.vx += a.ax * dt;
+      if (!a.pass && (hitsSolid(this.room, a) || solids.some((s) => overlap(a, s)))) {
         a.life = 0;
         continue;
       }
@@ -507,7 +512,7 @@ export class Game {
           a.life = 0;
         }
       } else if (overlap(p, a)) {
-        if (p.shield > 0 && a.shard) a.life = 0;
+        if (p.shield > 0 && (a.shard || a.spin)) a.life = 0;
         else if (p.shield > 0) {
           Object.assign(a, { vx: -a.vx, vy: -a.vy, friendly: true, life: 3, damage: p.reflectDamage });
           this.sound(900, 0.06, 'sine');
@@ -519,6 +524,21 @@ export class Game {
     }
     const r = this.room;
     this.arrows = this.arrows.filter((a) => a.life > 0 && a.x > -25 && a.x < r.w + 25 && a.y > -25 && a.y < r.h + 25);
+  }
+
+  /** Warned areas: harmless while delayed, then they hurt until they expire. */
+  private updateHazards(dt: number): void {
+    const p = this.player;
+    for (const h of this.hazards) {
+      if (h.delay > 0) {
+        h.delay -= dt;
+        if (h.delay <= 0 && h.kind === 'pillar') this.burst(h.x + h.w / 2, h.y + h.h, '#8fd0e0', 6);
+        continue;
+      }
+      h.life -= dt;
+      if (overlap(p, h)) this.hurtPlayer(h.x);
+    }
+    this.hazards = this.hazards.filter((h) => h.life > 0);
   }
 
   private updateWaves(dt: number): void {
@@ -582,6 +602,12 @@ export class Game {
 
   hitEnemy(e: Enemy, amount: number): void {
     if (e.hp <= 0) return;
+    if (e.boss?.guard) {
+      // Roaring into a new phase: blows glance off.
+      this.burst(centerX(e), centerY(e), '#eaf8ff', 6);
+      this.sound(900, 0.05, 'square');
+      return;
+    }
     e.hp -= amount;
     e.hit = 0.16;
     this.burst(centerX(e), centerY(e), '#a52d35');
@@ -607,6 +633,7 @@ export class Game {
       this.enemies = this.enemies.filter((x) => !x.summoned);
       this.arrows = [];
       this.waves = [];
+      this.hazards = [];
       this.save();
       this.mode = 'win';
       this.events.emit('victory', def);

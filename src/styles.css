@@ -877,3 +877,13 @@ button:disabled {
     animation: none;
   }
 }
+
+/* Second boss phase: the health bar burns brighter. */
+#bossbar.enraged {
+  color: #f0a3c8;
+}
+
+#bossbar.enraged i {
+  background: #d9467e;
+  box-shadow: 0 0 10px #d9467e;
+}

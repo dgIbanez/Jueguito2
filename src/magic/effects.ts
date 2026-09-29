@@ -49,7 +49,7 @@ function gust(game: Game, id: string, lv: SpellLevel): void {
   }
   for (const a of game.arrows) {
     if (a.friendly || !overlap(area, a)) continue;
-    if (lv.reflect && !a.shard) Object.assign(a, { vx: -a.vx, vy: -a.vy, friendly: true, life: 3, damage: 1 });
+    if (lv.reflect && !a.shard && !a.spin) Object.assign(a, { vx: -a.vx, vy: -a.vy, friendly: true, life: 3, damage: 1 });
     else a.life = 0;
   }
   game.waves = game.waves.filter((w) => !overlap(area, w));

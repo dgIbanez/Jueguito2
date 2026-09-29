@@ -94,7 +94,11 @@ Copiá `cipher`, `ciphertext` y `solutionHash` a `data/pages.json`. El texto ori
 
 **Una magia.** En `spells.json`: `effect` (`fire`, `frost`, `vortex`, `shield`, `gust`), `cost`, un objeto por nivel en `levels` (daño, velocidad, duración, alcance, congelamiento…) y `upgrade` con el costo de cada mejora. Una fusión lleva `fusion: [a, b]` y `fuseCost`, y no la enseña ninguna página. Un efecto nuevo se programa en `src/magic/effects.ts`.
 
-**Un enemigo o un jefe.** Los valores van en `enemies.json` o `bosses.json`. Los comportamientos (`melee`, `archer`, `flyer`) y los movimientos de jefe (`slash`, `leap`, `charge`, `rain`) están en `src/entities/`; uno nuevo se agrega ahí y se referencia desde los datos.
+**Un enemigo.** Los valores van en `enemies.json`. Los comportamientos (`melee`, `archer`, `flyer`) están en `src/entities/enemies.ts`.
+
+**Un jefe.** En `bosses.json`, cada jefe tiene fases (`phases`): la primera con `"at": 1` y las siguientes con la fracción de vida en que empiezan, su propio patrón de ataques y una transición: `summon` (llama refuerzos) o `roar` (ruge invulnerable). Desde la segunda fase, los valores terminados en `Enraged` reemplazan a los normales. Movimientos disponibles: `slash`, `throw`, `leap`, `charge`, `roll`, `rain`, `eruption`, `beam` y `shatter` (en `src/entities/boss.ts`).
+
+**Animación de los jefes.** Cada jefe es un esqueleto 2D en `rigs.json`: huesos con padre, punto de unión, orden de dibujo y piezas (rectángulos, polígonos, círculos; con `glow` brillan y con `phase: 2` aparecen en la segunda fase). Las animaciones son poses clave con ángulos en grados (0 = colgando, −90 = al frente, 180 = arriba). Se llaman `idle`, `walk`, `air`, `recover`, `transition` y `<movimiento>_wind`, `_strike` y `_recover`. Las de ataque siguen el tiempo real del estado, así el gesto de aviso dura exactamente lo que dura la preparación. El validador revisa huesos y animaciones faltantes.
 
 Después de cualquier cambio, `npm run check` confirma que todo sigue siendo alcanzable.
 

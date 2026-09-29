@@ -1,19 +1,11 @@
-import type { ArcherDef, BossDef, EnemyDef, FlyerDef, MeleeDef } from '../content/types.ts';
+import type { ArcherDef, EnemyDef, FlyerDef, MeleeDef } from '../content/types.ts';
 import { centerX, centerY, overlap, type Rect } from '../core/math.ts';
 import { supportedAt, type Body } from '../world/collision.ts';
 import { Tile, type RoomData } from '../world/ldtk.ts';
+import type { BossState } from './boss.ts';
 import type { Player } from './player.ts';
 
-export type EnemyState = 'idle' | 'wind' | 'strike' | 'recover' | 'summon';
-
-export interface BossState {
-  id: string;
-  def: BossDef;
-  turn: number;
-  move: string;
-  hordeCalled: boolean;
-  target: number;
-}
+export type EnemyState = 'idle' | 'wind' | 'strike' | 'recover' | 'transition';
 
 export interface Enemy extends Body {
   /** Stable LDtk iid for persistent kills; null for summoned or boss units. */
@@ -53,6 +45,12 @@ export interface Arrow extends Rect {
   damage?: number;
   /** Falling crystal instead of an arrow (drawn differently). */
   shard?: boolean;
+  /** Horizontal acceleration (a thrown weapon slowing down and coming back). */
+  ax?: number;
+  /** Flies through walls. */
+  pass?: boolean;
+  /** Drawn as a spinning cleaver. */
+  spin?: boolean;
 }
 
 /** What enemy behaviors may read or trigger in the game. */

@@ -1,0 +1,1811 @@
+{
+  "goblin-king": {
+    "center": [
+      0,
+      -40
+    ],
+    "bones": [
+      {
+        "id": "pelvis",
+        "x": 0,
+        "y": -24,
+        "z": 0,
+        "parts": [
+          {
+            "shape": "rect",
+            "x": -15,
+            "y": -4,
+            "w": 30,
+            "h": 10,
+            "color": "#b49957"
+          }
+        ]
+      },
+      {
+        "id": "legBack",
+        "parent": "pelvis",
+        "x": -7,
+        "y": 4,
+        "z": -3,
+        "parts": [
+          {
+            "shape": "rect",
+            "x": -5,
+            "y": 0,
+            "w": 10,
+            "h": 12,
+            "color": "#6f8458"
+          }
+        ]
+      },
+      {
+        "id": "shinBack",
+        "parent": "legBack",
+        "x": 0,
+        "y": 12,
+        "z": -3,
+        "parts": [
+          {
+            "shape": "rect",
+            "x": -5,
+            "y": 0,
+            "w": 10,
+            "h": 10,
+            "color": "#6f8458"
+          },
+          {
+            "shape": "rect",
+            "x": -6,
+            "y": 8,
+            "w": 14,
+            "h": 4,
+            "color": "#3d3122"
+          }
+        ]
+      },
+      {
+        "id": "legFront",
+        "parent": "pelvis",
+        "x": 7,
+        "y": 4,
+        "z": 2,
+        "parts": [
+          {
+            "shape": "rect",
+            "x": -5,
+            "y": 0,
+            "w": 10,
+            "h": 12,
+            "color": "#90a46b"
+          }
+        ]
+      },
+      {
+        "id": "shinFront",
+        "parent": "legFront",
+        "x": 0,
+        "y": 12,
+        "z": 2,
+        "parts": [
+          {
+            "shape": "rect",
+            "x": -5,
+            "y": 0,
+            "w": 10,
+            "h": 10,
+            "color": "#90a46b"
+          },
+          {
+            "shape": "rect",
+            "x": -6,
+            "y": 8,
+            "w": 14,
+            "h": 4,
+            "color": "#4a3a28"
+          }
+        ]
+      },
+      {
+        "id": "armBack",
+        "parent": "torso",
+        "x": -14,
+        "y": -26,
+        "z": -2,
+        "parts": [
+          {
+            "shape": "rect",
+            "x": -5,
+            "y": 0,
+            "w": 10,
+            "h": 16,
+            "color": "#7f935d"
+          }
+        ]
+      },
+      {
+        "id": "forearmBack",
+        "parent": "armBack",
+        "x": 0,
+        "y": 16,
+        "z": -2,
+        "parts": [
+          {
+            "shape": "rect",
+            "x": -5,
+            "y": 0,
+            "w": 10,
+            "h": 14,
+            "color": "#7f935d"
+          },
+          {
+            "shape": "rect",
+            "x": -6,
+            "y": 12,
+            "w": 12,
+            "h": 8,
+            "color": "#6f8458"
+          }
+        ]
+      },
+      {
+        "id": "torso",
+        "parent": "pelvis",
+        "x": 0,
+        "y": -2,
+        "z": 0,
+        "parts": [
+          {
+            "shape": "rect",
+            "x": -17,
+            "y": -30,
+            "w": 34,
+            "h": 32,
+            "color": "#794f36"
+          },
+          {
+            "shape": "rect",
+            "x": -17,
+            "y": -30,
+            "w": 34,
+            "h": 6,
+            "color": "#b49957"
+          },
+          {
+            "shape": "rect",
+            "x": -3,
+            "y": -24,
+            "w": 6,
+            "h": 22,
+            "color": "#5b3a27"
+          }
+        ]
+      },
+      {
+        "id": "head",
+        "parent": "torso",
+        "x": 2,
+        "y": -30,
+        "z": 1,
+        "parts": [
+          {
+            "shape": "poly",
+            "points": [
+              [
+                -12,
+                -16
+              ],
+              [
+                -23,
+                -21
+              ],
+              [
+                -12,
+                -9
+              ]
+            ],
+            "color": "#7f935d"
+          },
+          {
+            "shape": "poly",
+            "points": [
+              [
+                12,
+                -16
+              ],
+              [
+                23,
+                -20
+              ],
+              [
+                12,
+                -9
+              ]
+            ],
+            "color": "#90a46b"
+          },
+          {
+            "shape": "rect",
+            "x": -12,
+            "y": -22,
+            "w": 24,
+            "h": 22,
+            "color": "#90a46b"
+          },
+          {
+            "shape": "rect",
+            "x": -10,
+            "y": -6,
+            "w": 20,
+            "h": 6,
+            "color": "#7f935d"
+          },
+          {
+            "shape": "rect",
+            "x": 3,
+            "y": -15,
+            "w": 7,
+            "h": 4,
+            "color": "#e6c878"
+          },
+          {
+            "shape": "rect",
+            "x": 6,
+            "y": -14,
+            "w": 3,
+            "h": 3,
+            "color": "#18271b"
+          },
+          {
+            "shape": "rect",
+            "x": 6,
+            "y": -7,
+            "w": 3,
+            "h": 5,
+            "color": "#e8e0c0"
+          },
+          {
+            "shape": "rect",
+            "x": -12,
+            "y": -28,
+            "w": 24,
+            "h": 7,
+            "color": "#c4a555"
+          },
+          {
+            "shape": "poly",
+            "points": [
+              [
+                -12,
+                -28
+              ],
+              [
+                -10,
+                -37
+              ],
+              [
+                -6,
+                -28
+              ]
+            ],
+            "color": "#d6bf72"
+          },
+          {
+            "shape": "poly",
+            "points": [
+              [
+                -3,
+                -28
+              ],
+              [
+                0,
+                -40
+              ],
+              [
+                3,
+                -28
+              ]
+            ],
+            "color": "#d6bf72"
+          },
+          {
+            "shape": "poly",
+            "points": [
+              [
+                6,
+                -28
+              ],
+              [
+                10,
+                -37
+              ],
+              [
+                12,
+                -28
+              ]
+            ],
+            "color": "#d6bf72"
+          }
+        ]
+      },
+      {
+        "id": "armFront",
+        "parent": "torso",
+        "x": 14,
+        "y": -26,
+        "z": 3,
+        "parts": [
+          {
+            "shape": "rect",
+            "x": -5,
+            "y": 0,
+            "w": 10,
+            "h": 16,
+            "color": "#90a46b"
+          },
+          {
+            "shape": "rect",
+            "x": -8,
+            "y": -4,
+            "w": 16,
+            "h": 8,
+            "color": "#b49957"
+          }
+        ]
+      },
+      {
+        "id": "forearmFront",
+        "parent": "armFront",
+        "x": 0,
+        "y": 16,
+        "z": 3,
+        "parts": [
+          {
+            "shape": "rect",
+            "x": -5,
+            "y": 0,
+            "w": 10,
+            "h": 14,
+            "color": "#90a46b"
+          },
+          {
+            "shape": "rect",
+            "x": -6,
+            "y": 12,
+            "w": 12,
+            "h": 8,
+            "color": "#7f935d"
+          }
+        ]
+      },
+      {
+        "id": "weapon",
+        "parent": "forearmFront",
+        "x": 0,
+        "y": 17,
+        "z": 4,
+        "parts": [
+          {
+            "shape": "rect",
+            "x": -2,
+            "y": -6,
+            "w": 4,
+            "h": 30,
+            "color": "#8c7046"
+          },
+          {
+            "shape": "poly",
+            "points": [
+              [
+                -2,
+                12
+              ],
+              [
+                17,
+                6
+              ],
+              [
+                21,
+                22
+              ],
+              [
+                -2,
+                25
+              ]
+            ],
+            "color": "#acb39b"
+          },
+          {
+            "shape": "poly",
+            "points": [
+              [
+                17,
+                6
+              ],
+              [
+                21,
+                22
+              ],
+              [
+                18,
+                22
+              ],
+              [
+                14,
+                8
+              ]
+            ],
+            "color": "#dde2cf"
+          }
+        ]
+      }
+    ],
+    "clips": {
+      "idle": {
+        "loop": true,
+        "duration": 1.4,
+        "keys": [
+          {
+            "t": 0,
+            "pose": {}
+          },
+          {
+            "t": 0.5,
+            "pose": {
+              "torso": -3,
+              "head": 3,
+              "armFront": -5,
+              "armBack": 5,
+              "rootY": 1
+            }
+          },
+          {
+            "t": 1,
+            "pose": {}
+          }
+        ]
+      },
+      "walk": {
+        "loop": true,
+        "duration": 0.55,
+        "keys": [
+          {
+            "t": 0,
+            "pose": {
+              "legFront": 25,
+              "shinFront": -5,
+              "legBack": -25,
+              "shinBack": 15,
+              "armFront": -15,
+              "armBack": 15
+            }
+          },
+          {
+            "t": 0.25,
+            "pose": {
+              "rootY": -2
+            }
+          },
+          {
+            "t": 0.5,
+            "pose": {
+              "legFront": -25,
+              "shinFront": 15,
+              "legBack": 25,
+              "shinBack": -5,
+              "armFront": 15,
+              "armBack": -15
+            }
+          },
+          {
+            "t": 0.75,
+            "pose": {
+              "rootY": -2
+            }
+          },
+          {
+            "t": 1,
+            "pose": {
+              "legFront": 25,
+              "shinFront": -5,
+              "legBack": -25,
+              "shinBack": 15,
+              "armFront": -15,
+              "armBack": 15
+            }
+          }
+        ]
+      },
+      "air": {
+        "keys": [
+          {
+            "t": 0,
+            "pose": {
+              "legFront": -40,
+              "shinFront": 60,
+              "legBack": -20,
+              "shinBack": 50,
+              "armFront": -60,
+              "armBack": 40
+            }
+          }
+        ]
+      },
+      "recover": {
+        "keys": [
+          {
+            "t": 0,
+            "pose": {
+              "torso": 12,
+              "head": -8,
+              "armFront": 20
+            }
+          },
+          {
+            "t": 1,
+            "pose": {}
+          }
+        ]
+      },
+      "transition": {
+        "keys": [
+          {
+            "t": 0,
+            "pose": {}
+          },
+          {
+            "t": 0.3,
+            "pose": {
+              "armFront": -170,
+              "forearmFront": -10,
+              "armBack": -165,
+              "head": -18,
+              "torso": -8
+            }
+          },
+          {
+            "t": 1,
+            "pose": {
+              "armFront": -170,
+              "forearmFront": -10,
+              "armBack": -165,
+              "head": -18,
+              "torso": -8
+            }
+          }
+        ]
+      },
+      "slash_wind": {
+        "keys": [
+          {
+            "t": 0,
+            "pose": {}
+          },
+          {
+            "t": 1,
+            "pose": {
+              "torso": -14,
+              "head": -6,
+              "armFront": -200,
+              "forearmFront": -30,
+              "weapon": -20,
+              "armBack": 30,
+              "legFront": -10,
+              "legBack": 15,
+              "rootX": -4
+            }
+          }
+        ]
+      },
+      "slash_strike": {
+        "keys": [
+          {
+            "t": 0,
+            "pose": {
+              "torso": -14,
+              "head": -6,
+              "armFront": -200,
+              "forearmFront": -30,
+              "weapon": -20,
+              "armBack": 30,
+              "legFront": -10,
+              "legBack": 15,
+              "rootX": -4
+            }
+          },
+          {
+            "t": 0.25,
+            "pose": {
+              "torso": 18,
+              "head": 6,
+              "armFront": -40,
+              "forearmFront": 10,
+              "weapon": 10,
+              "armBack": -20,
+              "legFront": 20,
+              "legBack": -15,
+              "rootX": 6
+            }
+          },
+          {
+            "t": 1,
+            "pose": {
+              "torso": 14,
+              "armFront": -50,
+              "forearmFront": 10,
+              "rootX": 6
+            }
+          }
+        ]
+      },
+      "slash_recover": {
+        "keys": [
+          {
+            "t": 0,
+            "pose": {
+              "torso": 14,
+              "armFront": -50,
+              "forearmFront": 10,
+              "rootX": 6
+            }
+          },
+          {
+            "t": 1,
+            "pose": {}
+          }
+        ]
+      },
+      "throw_wind": {
+        "keys": [
+          {
+            "t": 0,
+            "pose": {}
+          },
+          {
+            "t": 1,
+            "pose": {
+              "torso": -16,
+              "armFront": -205,
+              "forearmFront": -50,
+              "weapon": -40,
+              "armBack": 25,
+              "rootX": -3
+            }
+          }
+        ]
+      },
+      "throw_strike": {
+        "keys": [
+          {
+            "t": 0,
+            "pose": {
+              "torso": -16,
+              "armFront": -205,
+              "forearmFront": -50,
+              "weapon": -40,
+              "armBack": 25,
+              "rootX": -3
+            }
+          },
+          {
+            "t": 0.3,
+            "pose": {
+              "torso": 14,
+              "armFront": -100,
+              "forearmFront": 0,
+              "armBack": -15,
+              "rootX": 4,
+              "hide_weapon": 1
+            }
+          },
+          {
+            "t": 1,
+            "pose": {
+              "torso": 10,
+              "armFront": -70,
+              "hide_weapon": 1
+            }
+          }
+        ]
+      },
+      "throw_recover": {
+        "keys": [
+          {
+            "t": 0,
+            "pose": {
+              "torso": 10,
+              "armFront": -70,
+              "hide_weapon": 1
+            }
+          },
+          {
+            "t": 0.85,
+            "pose": {
+              "hide_weapon": 1
+            }
+          },
+          {
+            "t": 1,
+            "pose": {}
+          }
+        ]
+      },
+      "leap_wind": {
+        "keys": [
+          {
+            "t": 0,
+            "pose": {}
+          },
+          {
+            "t": 1,
+            "pose": {
+              "rootY": 10,
+              "scaleY": 0.88,
+              "scaleX": 1.08,
+              "legFront": -35,
+              "shinFront": 60,
+              "legBack": -30,
+              "shinBack": 55,
+              "torso": 10,
+              "armFront": 30,
+              "armBack": 40,
+              "forearmFront": -20
+            }
+          }
+        ]
+      },
+      "leap_strike": {
+        "keys": [
+          {
+            "t": 0,
+            "pose": {
+              "legFront": -45,
+              "shinFront": 70,
+              "legBack": -35,
+              "shinBack": 65,
+              "armFront": -150,
+              "forearmFront": -20,
+              "armBack": -140,
+              "torso": -6
+            }
+          },
+          {
+            "t": 0.6,
+            "pose": {
+              "legFront": -45,
+              "shinFront": 70,
+              "legBack": -35,
+              "shinBack": 65,
+              "armFront": -150,
+              "forearmFront": -20,
+              "armBack": -140,
+              "torso": -6
+            }
+          },
+          {
+            "t": 1,
+            "pose": {
+              "torso": 15,
+              "armFront": -30,
+              "armBack": -20,
+              "rootY": 4,
+              "scaleY": 0.92
+            }
+          }
+        ]
+      },
+      "leap_recover": {
+        "keys": [
+          {
+            "t": 0,
+            "pose": {
+              "rootY": 4,
+              "scaleY": 0.92,
+              "torso": 15,
+              "armFront": -30
+            }
+          },
+          {
+            "t": 1,
+            "pose": {}
+          }
+        ]
+      },
+      "charge_wind": {
+        "keys": [
+          {
+            "t": 0,
+            "pose": {}
+          },
+          {
+            "t": 1,
+            "pose": {
+              "torso": 28,
+              "head": -14,
+              "armFront": -10,
+              "forearmFront": -60,
+              "armBack": 30,
+              "legFront": -30,
+              "shinFront": 30,
+              "legBack": 30,
+              "rootX": -6,
+              "rootY": 3
+            }
+          }
+        ]
+      },
+      "charge_strike": {
+        "base": {
+          "torso": 32,
+          "head": -16,
+          "armFront": -10,
+          "forearmFront": -60,
+          "armBack": 30,
+          "rootY": 2
+        },
+        "keys": [
+          {
+            "t": 0,
+            "pose": {
+              "legFront": -35,
+              "legBack": 35
+            }
+          },
+          {
+            "t": 0.25,
+            "pose": {
+              "legFront": 35,
+              "legBack": -35
+            }
+          },
+          {
+            "t": 0.5,
+            "pose": {
+              "legFront": -35,
+              "legBack": 35
+            }
+          },
+          {
+            "t": 0.75,
+            "pose": {
+              "legFront": 35,
+              "legBack": -35
+            }
+          },
+          {
+            "t": 1,
+            "pose": {
+              "legFront": -35,
+              "legBack": 35
+            }
+          }
+        ]
+      }
+    }
+  },
+  "golem": {
+    "center": [
+      0,
+      -44
+    ],
+    "bones": [
+      {
+        "id": "pelvis",
+        "x": 0,
+        "y": -22,
+        "z": 0,
+        "parts": [
+          {
+            "shape": "rect",
+            "x": -20,
+            "y": -6,
+            "w": 40,
+            "h": 10,
+            "color": "#343a50"
+          }
+        ]
+      },
+      {
+        "id": "legBack",
+        "parent": "pelvis",
+        "x": -10,
+        "y": 2,
+        "z": -3,
+        "parts": [
+          {
+            "shape": "rect",
+            "x": -8,
+            "y": 0,
+            "w": 16,
+            "h": 20,
+            "color": "#2c3146"
+          },
+          {
+            "shape": "rect",
+            "x": -10,
+            "y": 15,
+            "w": 20,
+            "h": 6,
+            "color": "#232839"
+          }
+        ]
+      },
+      {
+        "id": "legFront",
+        "parent": "pelvis",
+        "x": 10,
+        "y": 2,
+        "z": 2,
+        "parts": [
+          {
+            "shape": "rect",
+            "x": -8,
+            "y": 0,
+            "w": 16,
+            "h": 20,
+            "color": "#3a4058"
+          },
+          {
+            "shape": "rect",
+            "x": -10,
+            "y": 15,
+            "w": 20,
+            "h": 6,
+            "color": "#2c3146"
+          }
+        ]
+      },
+      {
+        "id": "armBack",
+        "parent": "torso",
+        "x": -30,
+        "y": -38,
+        "z": -2,
+        "parts": [
+          {
+            "shape": "rect",
+            "x": -8,
+            "y": -4,
+            "w": 16,
+            "h": 24,
+            "color": "#2c3146"
+          }
+        ]
+      },
+      {
+        "id": "fistBack",
+        "parent": "armBack",
+        "x": 0,
+        "y": 18,
+        "z": -2,
+        "parts": [
+          {
+            "shape": "rect",
+            "x": -9,
+            "y": 0,
+            "w": 18,
+            "h": 18,
+            "color": "#2c3146"
+          },
+          {
+            "shape": "poly",
+            "points": [
+              [
+                -8,
+                18
+              ],
+              [
+                0,
+                25
+              ],
+              [
+                8,
+                18
+              ]
+            ],
+            "color": "#6fa9c2"
+          }
+        ]
+      },
+      {
+        "id": "torso",
+        "parent": "pelvis",
+        "x": 0,
+        "y": -4,
+        "z": 0,
+        "parts": [
+          {
+            "shape": "rect",
+            "x": -28,
+            "y": -44,
+            "w": 56,
+            "h": 46,
+            "color": "#4a5068"
+          },
+          {
+            "shape": "rect",
+            "x": -28,
+            "y": -44,
+            "w": 56,
+            "h": 6,
+            "color": "#5c6480"
+          },
+          {
+            "shape": "rect",
+            "x": -20,
+            "y": -4,
+            "w": 40,
+            "h": 4,
+            "color": "#3a4058"
+          },
+          {
+            "shape": "circle",
+            "x": 0,
+            "y": -22,
+            "r": 12,
+            "color": "#2c3146"
+          },
+          {
+            "shape": "circle",
+            "x": 0,
+            "y": -22,
+            "r": 8,
+            "color": "#bfe6ff",
+            "glow": true
+          },
+          {
+            "shape": "poly",
+            "points": [
+              [
+                -26,
+                -44
+              ],
+              [
+                -21,
+                -64
+              ],
+              [
+                -15,
+                -44
+              ]
+            ],
+            "color": "#8fd0e0"
+          },
+          {
+            "shape": "poly",
+            "points": [
+              [
+                14,
+                -44
+              ],
+              [
+                20,
+                -60
+              ],
+              [
+                26,
+                -44
+              ]
+            ],
+            "color": "#8fd0e0"
+          },
+          {
+            "shape": "poly",
+            "points": [
+              [
+                -9,
+                -44
+              ],
+              [
+                -2,
+                -74
+              ],
+              [
+                5,
+                -44
+              ]
+            ],
+            "color": "#b98fe0",
+            "phase": 2
+          },
+          {
+            "shape": "poly",
+            "points": [
+              [
+                -28,
+                -32
+              ],
+              [
+                -46,
+                -40
+              ],
+              [
+                -28,
+                -20
+              ]
+            ],
+            "color": "#b98fe0",
+            "phase": 2
+          },
+          {
+            "shape": "poly",
+            "points": [
+              [
+                28,
+                -32
+              ],
+              [
+                44,
+                -44
+              ],
+              [
+                28,
+                -22
+              ]
+            ],
+            "color": "#b98fe0",
+            "phase": 2
+          }
+        ]
+      },
+      {
+        "id": "head",
+        "parent": "torso",
+        "x": 0,
+        "y": -44,
+        "z": 1,
+        "parts": [
+          {
+            "shape": "rect",
+            "x": -12,
+            "y": -16,
+            "w": 24,
+            "h": 16,
+            "color": "#4a5068"
+          },
+          {
+            "shape": "rect",
+            "x": -9,
+            "y": -10,
+            "w": 18,
+            "h": 4,
+            "color": "#9fe3ff",
+            "glow": true
+          },
+          {
+            "shape": "poly",
+            "points": [
+              [
+                -6,
+                -16
+              ],
+              [
+                0,
+                -26
+              ],
+              [
+                6,
+                -16
+              ]
+            ],
+            "color": "#b98fe0",
+            "phase": 2
+          }
+        ]
+      },
+      {
+        "id": "armFront",
+        "parent": "torso",
+        "x": 30,
+        "y": -38,
+        "z": 3,
+        "parts": [
+          {
+            "shape": "rect",
+            "x": -8,
+            "y": -4,
+            "w": 16,
+            "h": 24,
+            "color": "#3a4058"
+          },
+          {
+            "shape": "poly",
+            "points": [
+              [
+                -6,
+                -4
+              ],
+              [
+                0,
+                -16
+              ],
+              [
+                6,
+                -4
+              ]
+            ],
+            "color": "#8fd0e0"
+          }
+        ]
+      },
+      {
+        "id": "fistFront",
+        "parent": "armFront",
+        "x": 0,
+        "y": 18,
+        "z": 3,
+        "parts": [
+          {
+            "shape": "rect",
+            "x": -10,
+            "y": 0,
+            "w": 20,
+            "h": 20,
+            "color": "#3a4058"
+          },
+          {
+            "shape": "poly",
+            "points": [
+              [
+                -10,
+                20
+              ],
+              [
+                0,
+                28
+              ],
+              [
+                10,
+                20
+              ]
+            ],
+            "color": "#8fd0e0"
+          }
+        ]
+      }
+    ],
+    "clips": {
+      "idle": {
+        "loop": true,
+        "duration": 2,
+        "keys": [
+          {
+            "t": 0,
+            "pose": {}
+          },
+          {
+            "t": 0.5,
+            "pose": {
+              "torso": -2,
+              "armFront": -5,
+              "armBack": 5,
+              "rootY": 1
+            }
+          },
+          {
+            "t": 1,
+            "pose": {}
+          }
+        ]
+      },
+      "walk": {
+        "loop": true,
+        "duration": 0.9,
+        "keys": [
+          {
+            "t": 0,
+            "pose": {
+              "legFront": 18,
+              "legBack": -18,
+              "armFront": -10,
+              "armBack": 10
+            }
+          },
+          {
+            "t": 0.25,
+            "pose": {
+              "rootY": -2,
+              "torso": 2
+            }
+          },
+          {
+            "t": 0.5,
+            "pose": {
+              "legFront": -18,
+              "legBack": 18,
+              "armFront": 10,
+              "armBack": -10
+            }
+          },
+          {
+            "t": 0.75,
+            "pose": {
+              "rootY": -2,
+              "torso": 2
+            }
+          },
+          {
+            "t": 1,
+            "pose": {
+              "legFront": 18,
+              "legBack": -18,
+              "armFront": -10,
+              "armBack": 10
+            }
+          }
+        ]
+      },
+      "air": {
+        "keys": [
+          {
+            "t": 0,
+            "pose": {
+              "legFront": -20,
+              "legBack": -10,
+              "armFront": -120,
+              "armBack": -120
+            }
+          }
+        ]
+      },
+      "recover": {
+        "keys": [
+          {
+            "t": 0,
+            "pose": {
+              "torso": 10,
+              "head": 6
+            }
+          },
+          {
+            "t": 1,
+            "pose": {}
+          }
+        ]
+      },
+      "transition": {
+        "keys": [
+          {
+            "t": 0,
+            "pose": {}
+          },
+          {
+            "t": 0.2,
+            "pose": {
+              "head": -35,
+              "armFront": -135,
+              "armBack": -120,
+              "torso": -14,
+              "glow": 1,
+              "scaleX": 1.06,
+              "scaleY": 1.06
+            }
+          },
+          {
+            "t": 1,
+            "pose": {
+              "head": -35,
+              "armFront": -135,
+              "armBack": -120,
+              "torso": -14,
+              "glow": 1,
+              "scaleX": 1.06,
+              "scaleY": 1.06
+            }
+          }
+        ]
+      },
+      "eruption_wind": {
+        "keys": [
+          {
+            "t": 0,
+            "pose": {}
+          },
+          {
+            "t": 1,
+            "pose": {
+              "armFront": -175,
+              "fistFront": -10,
+              "torso": -8,
+              "rootX": -2
+            }
+          }
+        ]
+      },
+      "eruption_strike": {
+        "keys": [
+          {
+            "t": 0,
+            "pose": {
+              "armFront": -175,
+              "fistFront": -10,
+              "torso": -8,
+              "rootX": -2
+            }
+          },
+          {
+            "t": 0.15,
+            "pose": {
+              "armFront": -30,
+              "torso": 30,
+              "head": 10,
+              "rootY": 6,
+              "rootX": 8
+            }
+          },
+          {
+            "t": 1,
+            "pose": {
+              "armFront": -30,
+              "torso": 30,
+              "head": 10,
+              "rootY": 6,
+              "rootX": 8
+            }
+          }
+        ]
+      },
+      "eruption_recover": {
+        "keys": [
+          {
+            "t": 0,
+            "pose": {
+              "armFront": -30,
+              "torso": 30,
+              "rootY": 6,
+              "rootX": 8
+            }
+          },
+          {
+            "t": 1,
+            "pose": {}
+          }
+        ]
+      },
+      "rain_wind": {
+        "keys": [
+          {
+            "t": 0,
+            "pose": {}
+          },
+          {
+            "t": 1,
+            "pose": {
+              "armFront": -170,
+              "armBack": -170,
+              "head": -20,
+              "torso": -6,
+              "glow": 1
+            }
+          }
+        ]
+      },
+      "rain_strike": {
+        "keys": [
+          {
+            "t": 0,
+            "pose": {
+              "armFront": -170,
+              "armBack": -170,
+              "head": -20,
+              "torso": -6,
+              "glow": 1
+            }
+          },
+          {
+            "t": 0.3,
+            "pose": {
+              "armFront": -150,
+              "armBack": -150,
+              "torso": 4,
+              "rootY": 3
+            }
+          },
+          {
+            "t": 1,
+            "pose": {
+              "armFront": -150,
+              "armBack": -150
+            }
+          }
+        ]
+      },
+      "rain_recover": {
+        "keys": [
+          {
+            "t": 0,
+            "pose": {
+              "armFront": -150,
+              "armBack": -150
+            }
+          },
+          {
+            "t": 1,
+            "pose": {}
+          }
+        ]
+      },
+      "leap_wind": {
+        "keys": [
+          {
+            "t": 0,
+            "pose": {}
+          },
+          {
+            "t": 1,
+            "pose": {
+              "rootY": 10,
+              "scaleY": 0.85,
+              "scaleX": 1.1,
+              "armFront": 40,
+              "armBack": 40,
+              "torso": 12
+            }
+          }
+        ]
+      },
+      "leap_strike": {
+        "keys": [
+          {
+            "t": 0,
+            "pose": {
+              "armFront": -160,
+              "armBack": -160,
+              "legFront": -25,
+              "legBack": -15
+            }
+          },
+          {
+            "t": 0.65,
+            "pose": {
+              "armFront": -160,
+              "armBack": -160,
+              "legFront": -25,
+              "legBack": -15
+            }
+          },
+          {
+            "t": 0.8,
+            "pose": {
+              "armFront": -30,
+              "armBack": -30,
+              "torso": 20,
+              "rootY": 6,
+              "scaleY": 0.9
+            }
+          },
+          {
+            "t": 1,
+            "pose": {
+              "armFront": -30,
+              "armBack": -30,
+              "torso": 20,
+              "rootY": 6
+            }
+          }
+        ]
+      },
+      "leap_recover": {
+        "keys": [
+          {
+            "t": 0,
+            "pose": {
+              "armFront": -30,
+              "armBack": -30,
+              "torso": 20,
+              "rootY": 6
+            }
+          },
+          {
+            "t": 1,
+            "pose": {}
+          }
+        ]
+      },
+      "beam_wind": {
+        "keys": [
+          {
+            "t": 0,
+            "pose": {}
+          },
+          {
+            "t": 1,
+            "pose": {
+              "torso": -10,
+              "head": -8,
+              "armFront": 40,
+              "armBack": 40,
+              "glow": 1,
+              "rootX": -4
+            }
+          }
+        ]
+      },
+      "beam_strike": {
+        "base": {
+          "torso": 6,
+          "armFront": -85,
+          "armBack": -60,
+          "glow": 1
+        },
+        "keys": [
+          {
+            "t": 0,
+            "pose": {
+              "rootX": -4
+            }
+          },
+          {
+            "t": 0.2,
+            "pose": {
+              "rootX": 3
+            }
+          },
+          {
+            "t": 1,
+            "pose": {
+              "rootX": 3
+            }
+          }
+        ]
+      },
+      "beam_recover": {
+        "keys": [
+          {
+            "t": 0,
+            "pose": {
+              "torso": 6,
+              "armFront": -85
+            }
+          },
+          {
+            "t": 1,
+            "pose": {}
+          }
+        ]
+      },
+      "roll_wind": {
+        "keys": [
+          {
+            "t": 0,
+            "pose": {}
+          },
+          {
+            "t": 1,
+            "pose": {
+              "torso": 40,
+              "head": 30,
+              "armFront": -40,
+              "armBack": -40,
+              "legFront": -30,
+              "legBack": -30,
+              "rootY": 10,
+              "scaleY": 0.82
+            }
+          }
+        ]
+      },
+      "roll_strike": {
+        "base": {
+          "torso": 40,
+          "head": 30,
+          "armFront": -40,
+          "armBack": -40,
+          "legFront": -40,
+          "legBack": -40,
+          "rootY": 10,
+          "scaleY": 0.82
+        },
+        "keys": [
+          {
+            "t": 0,
+            "pose": {
+              "rootRot": 0
+            }
+          },
+          {
+            "t": 1,
+            "pose": {
+              "rootRot": 720
+            }
+          }
+        ]
+      },
+      "roll_recover": {
+        "keys": [
+          {
+            "t": 0,
+            "pose": {
+              "torso": 20,
+              "rootY": 4
+            }
+          },
+          {
+            "t": 1,
+            "pose": {}
+          }
+        ]
+      },
+      "shatter_wind": {
+        "keys": [
+          {
+            "t": 0,
+            "pose": {}
+          },
+          {
+            "t": 1,
+            "pose": {
+              "rootY": 14,
+              "scaleY": 0.8,
+              "scaleX": 1.12,
+              "armFront": 50,
+              "armBack": 50,
+              "torso": 16,
+              "glow": 1
+            }
+          }
+        ]
+      },
+      "shatter_strike": {
+        "keys": [
+          {
+            "t": 0,
+            "pose": {
+              "armFront": -170,
+              "armBack": -170,
+              "legFront": -30,
+              "legBack": -20,
+              "glow": 1
+            }
+          },
+          {
+            "t": 0.7,
+            "pose": {
+              "armFront": -170,
+              "armBack": -170,
+              "legFront": -30,
+              "legBack": -20,
+              "glow": 1
+            }
+          },
+          {
+            "t": 0.8,
+            "pose": {
+              "armFront": -30,
+              "armBack": -30,
+              "torso": 25,
+              "rootY": 8,
+              "scaleY": 0.88,
+              "glow": 1
+            }
+          },
+          {
+            "t": 1,
+            "pose": {
+              "armFront": -30,
+              "armBack": -30,
+              "torso": 25,
+              "rootY": 8
+            }
+          }
+        ]
+      },
+      "shatter_recover": {
+        "keys": [
+          {
+            "t": 0,
+            "pose": {
+              "armFront": -30,
+              "armBack": -30,
+              "torso": 25,
+              "rootY": 8
+            }
+          },
+          {
+            "t": 1,
+            "pose": {}
+          }
+        ]
+      }
+    }
+  }
+}

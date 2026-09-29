@@ -4,6 +4,7 @@ import clues from '../../data/clues.json';
 import enemies from '../../data/enemies.json';
 import items from '../../data/items.json';
 import pages from '../../data/pages.json';
+import rigs from '../../data/rigs.json';
 import scripts from '../../data/scripts.json';
 import spells from '../../data/spells.json';
 import story from '../../data/story.json';
@@ -24,5 +25,6 @@ export function loadContent(): Content {
     clues,
     scripts,
     story,
+    rigs: rigs as unknown as Content['rigs'],
   };
 }

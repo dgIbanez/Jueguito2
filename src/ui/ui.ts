@@ -427,7 +427,7 @@ export class Ui {
       .map((id, i) => (id ? `${this.input.label(SPELL_ACTIONS[i]).split(' / ')[0]} ${this.game.content.spells[id]?.name ?? id}` : ''))
       .filter(Boolean)
       .join(' · ');
-    const hud = `${p.hp}|${mana}|${boss?.hp ?? ''}|${this.input.label('grimoire')}|${this.input.label('map')}|${spells}|${progress.shards}`;
+    const hud = `${p.hp}|${mana}|${boss?.hp ?? ''}:${boss?.boss?.phase ?? ''}|${this.input.label('grimoire')}|${this.input.label('map')}|${spells}|${progress.shards}`;
     if (hud === this.hudCache) return;
     this.hudCache = hud;
     $('#health')!.textContent = '♥'.repeat(Math.max(0, p.hp)) + '♡'.repeat(Math.max(0, PLAYER.maxHp - p.hp));
@@ -439,6 +439,7 @@ export class Ui {
     bar.hidden = !boss;
     if (boss?.boss) {
       $('#boss-name')!.textContent = boss.boss.def.name;
+      bar.classList.toggle('enraged', boss.boss.phase > 0);
       $<HTMLElement>('#bossbar i')!.style.width = `${Math.max(0, (boss.hp / boss.max) * 100)}%`;
     }
   }

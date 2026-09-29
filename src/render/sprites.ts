@@ -1,4 +1,3 @@
-import { windupLength } from '../entities/boss.ts';
 import type { Arrow, Enemy } from '../entities/enemies.ts';
 import type { Player } from '../entities/player.ts';
 import { rect, RUNE_FONT, type Ctx } from './draw.ts';
@@ -116,30 +115,6 @@ function drawBow(ctx: Ctx, a: Enemy, windup: number): void {
   ctx.restore();
 }
 
-/** Boss telegraphs are body gestures, one per move. */
-function bossPose(ctx: Ctx, a: Enemy, time: number): void {
-  if (a.state === 'summon') {
-    ctx.translate(0, -2 + Math.sin(time * 22));
-    ctx.scale(1.04, 1.04);
-    return;
-  }
-  if (a.state !== 'wind') return;
-  const t = 1 - Math.max(0, a.timer) / windupLength(a);
-  const move = a.boss?.move;
-  if (move === 'slash') {
-    ctx.translate(-3 * t, 0);
-    ctx.rotate(-0.08 * t);
-  } else if (move === 'leap') {
-    ctx.translate(0, 7 * t);
-    ctx.scale(1 + 0.1 * t, 1 - 0.2 * t);
-  } else {
-    ctx.translate(-3 * t, 3 * t);
-    ctx.transform(1, 0, 0.18 * t, 1, 0, 0);
-  }
-}
-
-const BOSS_ARM: Record<string, number> = { slash: -2.1, leap: -0.5, charge: 0.35 };
-
 /** Crystal bat: flapping wings, eyes flare during the windup. */
 function drawBat(ctx: Ctx, a: Enemy, time: number): void {
   const cx = a.x + a.w / 2;
@@ -191,43 +166,8 @@ function drawCrawler(ctx: Ctx, a: Enemy, time: number): void {
   ctx.restore();
 }
 
-/** Vharn: a quartz golem with a pulsing core. */
-function drawGolem(ctx: Ctx, a: Enemy, time: number): void {
-  const t = a.state === 'wind' ? 1 - Math.max(0, a.timer) / windupLength(a) : 0;
-  const move = a.boss?.move;
-  ctx.save();
-  ctx.translate(a.x + a.w / 2, a.y + a.h);
-  ctx.scale(a.face, 1);
-  if (a.state === 'wind' && move === 'leap') ctx.scale(1 + 0.08 * t, 1 - 0.15 * t);
-  if (a.state === 'wind' && move === 'charge') ctx.transform(1, 0, 0.2 * t, 1, 0, 0);
-  if (a.state === 'summon') ctx.translate(Math.sin(time * 30) * 2, 0);
-  const stone = a.hit > 0 ? '#fff0ca' : '#4a5068';
-  const dark = a.hit > 0 ? '#f0dcb0' : '#343a50';
-  rect(ctx, -18, -26, 12, 26, dark);
-  rect(ctx, 6, -26, 12, 26, dark);
-  rect(ctx, -26, -66, 52, 42, stone);
-  rect(ctx, -16, -82, 32, 18, stone);
-  rect(ctx, -8, -76, 16, 4, '#9fe3ff');
-  const pulse = 0.6 + Math.sin(time * 4) * 0.3;
-  ctx.globalAlpha = pulse;
-  rect(ctx, -8, -52, 16, 16, '#bfe6ff');
-  ctx.globalAlpha = 1;
-  const raise = a.state === 'summon' || (a.state !== 'idle' && move === 'rain') ? -30 : a.state === 'wind' && move === 'leap' ? -12 * t : 0;
-  rect(ctx, -38, -62 + raise, 12, 34, dark);
-  rect(ctx, 26, -62 + raise, 12, 34, dark);
-  ctx.fillStyle = '#8fd0e0';
-  for (const [x, h] of [[-24, 20], [-14, 28], [14, 24], [22, 16]]) {
-    ctx.beginPath();
-    ctx.moveTo(x - 5, -64);
-    ctx.lineTo(x, -64 - h);
-    ctx.lineTo(x + 5, -64);
-    ctx.fill();
-  }
-  ctx.restore();
-}
-
 /** A translucent block of ice over frozen enemies. */
-function drawIce(ctx: Ctx, a: Enemy): void {
+export function drawIce(ctx: Ctx, a: Enemy): void {
   ctx.save();
   ctx.globalAlpha = 0.45;
   ctx.fillStyle = '#bfe6ff';
@@ -238,98 +178,75 @@ function drawIce(ctx: Ctx, a: Enemy): void {
   ctx.restore();
 }
 
+/** Ordinary enemies. Bosses are skeletal rigs, drawn by BossAnimator. */
 export function drawEnemy(ctx: Ctx, a: Enemy, time: number): void {
-  if (a.look === 'bat' || a.look === 'crawler' || a.look === 'golem') {
-    if (a.look === 'bat') drawBat(ctx, a, time);
-    else if (a.look === 'crawler') drawCrawler(ctx, a, time);
-    else drawGolem(ctx, a, time);
-    if (a.frozen > 0) drawIce(ctx, a);
-    if (!a.boss && a.hp < a.max && a.hp > 0) {
-      rect(ctx, a.x, a.y - 7, a.w, 3, '#182a22');
-      rect(ctx, a.x, a.y - 7, (a.w * a.hp) / a.max, 3, '#b9bb7c');
-    }
-    return;
-  }
-  drawGoblinFamily(ctx, a, time);
+  if (a.look === 'bat') drawBat(ctx, a, time);
+  else if (a.look === 'crawler') drawCrawler(ctx, a, time);
+  else drawGoblinFamily(ctx, a, time);
   if (a.frozen > 0) drawIce(ctx, a);
+  if (a.hp < a.max && a.hp > 0) {
+    rect(ctx, a.x, a.y - 7, a.w, 3, '#182a22');
+    rect(ctx, a.x, a.y - 7, (a.w * a.hp) / a.max, 3, '#b9bb7c');
+  }
 }
 
 function drawGoblinFamily(ctx: Ctx, a: Enemy, time: number): void {
   const x = Math.round(a.x);
   const y = Math.round(a.y);
-  const boss = !!a.boss;
   const { walk, bob } = motion(a, time);
   ctx.save();
   ctx.translate(x + a.w / 2, y);
-  ctx.scale(a.face * (boss ? 2 : 1), boss ? 2 : 1);
+  ctx.scale(a.face, 1);
   ctx.translate(a.hit > 0 ? -2 : 0, bob);
-  if (boss) bossPose(ctx, a, time);
-  else if (a.state === 'wind') {
+  if (a.state === 'wind') {
     ctx.translate(-2, 3);
     ctx.scale(1.08, 0.92);
   } else if (a.state === 'strike') ctx.translate(3, 0);
 
-  const skin = a.hit > 0 ? '#fff0ca' : boss ? '#90a46b' : a.look === 'hob' ? '#849268' : '#91aa65';
+  const skin = a.hit > 0 ? '#fff0ca' : a.look === 'hob' ? '#849268' : '#91aa65';
   rect(ctx, -9, 2, 18, 14, skin);
   rect(ctx, -14, 5, 7, 6, skin);
   rect(ctx, 9, 5, 6, 6, skin);
   rect(ctx, 2, 7, 5, 3, '#e6c878');
   rect(ctx, 3, 8, 3, 2, '#18271b');
-  rect(ctx, -9, 17, 19, boss ? 13 : 12, boss ? '#794f36' : '#554f32');
-  rect(ctx, -10, 16, 20, 5, boss ? '#b49957' : '#827952');
+  rect(ctx, -9, 17, 19, 12, '#554f32');
+  rect(ctx, -10, 16, 20, 5, '#827952');
   rect(ctx, -7, 28 + walk, 5, 7, skin);
   rect(ctx, 3, 28 - walk, 5, 7, skin);
   if (a.look === 'archer') drawBow(ctx, a, a.def?.ai === 'archer' ? a.def.windup : 0.85);
   else {
     ctx.save();
     ctx.translate(10, 18);
-    const arm = boss
-      ? a.state === 'summon'
-        ? -2.6
-        : a.state === 'wind'
-          ? (BOSS_ARM[a.boss!.move] ?? 0)
-          : a.state === 'strike'
-            ? 1.2
-            : walk * 0.06
-      : a.state === 'wind'
-        ? -1.7
-        : a.state === 'strike'
-          ? 1.2
-          : a.state === 'recover'
-            ? 0.5
-            : walk * 0.06;
-    ctx.rotate(arm);
+    ctx.rotate(a.state === 'wind' ? -1.7 : a.state === 'strike' ? 1.2 : a.state === 'recover' ? 0.5 : walk * 0.06);
     rect(ctx, 0, 0, 5, 8, skin);
     rect(ctx, 4, -6, 4, 22, '#8c7046');
     rect(ctx, 2, -8, 10, 8, '#acb39b');
     ctx.restore();
-  }
-  if (boss) {
-    rect(ctx, -10, -5, 21, 7, '#c4a555');
-    rect(ctx, -10, -10, 4, 7, '#d6bf72');
-    rect(ctx, -2, -13, 4, 10, '#d6bf72');
-    rect(ctx, 7, -10, 4, 7, '#d6bf72');
   }
   if (a.look === 'hob') {
     rect(ctx, -10, 14, 8, 24, '#797b62');
     rect(ctx, -7, 17, 2, 18, '#b9af7c');
   }
   ctx.restore();
-
-  if (boss && a.state === 'strike' && a.boss!.move === 'slash') {
-    ctx.strokeStyle = '#ecc692';
-    ctx.lineWidth = 6;
-    ctx.beginPath();
-    ctx.arc(x + a.w / 2, y + 36, 95, a.face > 0 ? -1.1 : 2, a.face > 0 ? 1.1 : 4.2);
-    ctx.stroke();
-  }
-  if (!boss && a.hp < a.max && a.hp > 0) {
-    rect(ctx, x, y - 7, a.w, 3, '#182a22');
-    rect(ctx, x, y - 7, (a.w * a.hp) / a.max, 3, '#b9bb7c');
-  }
 }
 
-export function drawArrow(ctx: Ctx, a: Arrow): void {
+export function drawArrow(ctx: Ctx, a: Arrow, time = 0): void {
+  if (a.spin) {
+    // A thrown cleaver, spinning.
+    ctx.save();
+    ctx.translate(a.x + a.w / 2, a.y + a.h / 2);
+    ctx.rotate(time * 18);
+    rect(ctx, -2, -13, 4, 26, '#8c7046');
+    ctx.fillStyle = '#acb39b';
+    ctx.beginPath();
+    ctx.moveTo(-2, 0);
+    ctx.lineTo(14, -6);
+    ctx.lineTo(16, 8);
+    ctx.lineTo(-2, 11);
+    ctx.fill();
+    ctx.restore();
+    return;
+  }
   if (a.shard) {
     // Falling quartz: a sharp crystal pointing down.
     ctx.fillStyle = '#8fd0e0';

@@ -1,4 +1,5 @@
 import type { Content, PageDef } from '../content/types.ts';
+import { BOSS_MOVES } from '../entities/boss.ts';
 import { ALPHABET, decode, distinctGlyphs } from '../magic/ciphers.ts';
 import { solutionHash } from '../magic/hash.ts';
 import { entitiesOf, roomAt, stringList, Tile, tileAt, type EntitySpawn, type RoomData } from './ldtk.ts';
@@ -105,9 +106,34 @@ export function validateWorld(c: Content): ValidationReport {
     }
   }
   for (const [id, boss] of Object.entries(c.bosses)) {
-    for (const move of boss.pattern) if (!boss.moves[move]) errors.push(`Jefe ${id}: el patrón usa "${move}" sin definirlo en moves.`);
-    for (const s of boss.summon) if (!c.enemies[s.kind]) errors.push(`Jefe ${id}: refuerzo desconocido "${s.kind}".`);
+    if (!boss.phases?.length || boss.phases[0].at !== 1) errors.push(`Jefe ${id}: la primera fase debe tener "at": 1.`);
+    boss.phases.forEach((phase, i) => {
+      if (i > 0 && phase.at >= boss.phases[i - 1].at) errors.push(`Jefe ${id}: las fases deben ir de mayor a menor vida.`);
+      for (const move of phase.pattern) {
+        if (!boss.moves[move]) errors.push(`Jefe ${id}: el patrón usa "${move}" sin definirlo en moves.`);
+        if (!BOSS_MOVES.has(move)) errors.push(`Jefe ${id}: el motor no conoce el movimiento "${move}".`);
+      }
+      for (const s of phase.transition?.summon ?? []) if (!c.enemies[s.kind]) errors.push(`Jefe ${id}: refuerzo desconocido "${s.kind}".`);
+    });
     if (boss.reward && !c.items[boss.reward]) errors.push(`Jefe ${id}: recompensa desconocida "${boss.reward}".`);
+    const rig = c.rigs?.[boss.look];
+    if (!rig) errors.push(`Jefe ${id}: no hay esqueleto "${boss.look}" en rigs.json.`);
+    else if (!rig.clips.idle) errors.push(`Esqueleto ${boss.look}: falta la animación "idle".`);
+    else
+      for (const move of Object.keys(boss.moves))
+        if (!rig.clips[`${move}_wind`] || !rig.clips[`${move}_strike`]) warnings.push(`Esqueleto ${boss.look}: "${move}" no tiene animaciones ${move}_wind/${move}_strike.`);
+  }
+  for (const [look, rig] of Object.entries(c.rigs ?? {})) {
+    const bones = new Set(rig.bones.map((b) => b.id));
+    for (const bone of rig.bones) if (bone.parent && !bones.has(bone.parent)) errors.push(`Esqueleto ${look}: el hueso "${bone.id}" cuelga de "${bone.parent}", que no existe.`);
+    for (const [name, clip] of Object.entries(rig.clips)) {
+      if (!clip.keys?.length) errors.push(`Esqueleto ${look}: la animación "${name}" no tiene claves.`);
+      for (const key of clip.keys ?? [])
+        for (const channel of Object.keys(key.pose)) {
+          const bone = channel.startsWith('hide_') ? channel.slice(5) : channel;
+          if (!bones.has(bone) && !['rootX', 'rootY', 'rootRot', 'scaleX', 'scaleY', 'glow'].includes(channel)) errors.push(`Esqueleto ${look}: "${name}" anima "${channel}", que no es un hueso.`);
+        }
+    }
   }
   for (const [id, spell] of Object.entries(c.spells)) {
     if (!spell.levels?.length) errors.push(`Hechizo ${id}: necesita al menos un nivel.`);
